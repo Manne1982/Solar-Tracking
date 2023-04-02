@@ -24,7 +24,7 @@ void WebserverRoot(AsyncWebServerRequest *request)
   HTMLTemp[0] = 0;
   sprintf(Header_neu, html_header, timeClient->getFormattedTime().c_str(), WeekDays[timeClient->getDay()].c_str(), monthDay, currentMonth, currentYear);
   //1. Fuellstand in L; 2. Fuellstand in Prozent; Wasserstand in mm; Fuellstand aenderung
-  sprintf(HTMLTemp, html_Start, 100, 100.0, 100, 100);
+  sprintf(HTMLTemp, html_Start, varProject.getStartPosition(), varProject.getEndPosition(), varProject.getMaxPosition(), varProject.getCurrentPosition());
   //Zusammenfassen der Einzelstrings
   sprintf(HTMLString, "%s%s", Header_neu, HTMLTemp);
   request->send_P(200, "text/html", HTMLString);

@@ -6,9 +6,11 @@
 #include "Project_Structures.h"
 #include <NTPClient.h>
 
-
 //Projektvariablen
 NWConfig varConfig;
+ProjectClass varProject;
+
+
 //-----------------------------------
 //Touch-Variablen neu
 unsigned long Break_200ms = 0;                             //Variable fuer Dinge die alle 200ms ausgefuehrt werden

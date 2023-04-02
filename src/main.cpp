@@ -21,6 +21,8 @@
 void setup(void)
 {
   char ResetCount;
+  varProject.InitIO();
+  attachInterrupt(digitalPinToInterrupt(CounterPinPosition), handleInterrupt, FALLING);
 
   ResetCount = ResetVarLesen();
   if((ResetCount < 0)||(ResetCount > 5))  //Prüfen ob Wert Plausibel, wenn nicht rücksetzen
@@ -30,8 +32,11 @@ void setup(void)
   ResetVarSpeichern(ResetCount);
   delay(1000);
   if (ResetCount < 5) //Wenn nicht 5 mal in den ersten 5 Sekunden der Startvorgang abgebrochen wurde
+  {
     EinstLaden();
-  ResetVarSpeichern(0);
+    LoadProjectData();
+    ResetVarSpeichern(0);
+  }
   //WLAN starten
   if (varConfig.NW_Flags&NW_WiFi_AP)
     WiFi_Start_AP(varConfig.WLAN_SSID, varConfig.WLAN_Password);
@@ -48,7 +53,6 @@ void setup(void)
   timeClient->begin();
   timeClient->setTimeOffset(varConfig.NW_NTPOffset * 3600);
 
-  
   //MQTT
   MQTTinit();
 
@@ -77,15 +81,17 @@ void loop()
 {
   //OTA
   ArduinoOTA.handle();
-  //Anweisungen werden alle 200 Millisekunden ausgefuehrt
-  if (Break_200ms < millis())
+  //Anweisungen werden alle 3600 Sekunden (1h) ausgefuehrt
+  if (Break_h < millis())
   {
-    Break_200ms = millis() + 200;
+    Break_h = millis() + 3600000;
+    timeClient->update();
   }
-  //Anweisungen werden alle 1 Sekunden ausgefuehrt
-  if (Break_1s < millis())
+    //Anweisungen werden alle 10 Minuten ausgefuehrt
+  if (Break_10m < millis())
   {
-    Break_1s = millis() + 1000;
+    Break_10m = millis() + 600000;
+    WIFIConnectionCheck(true);
   }
   //Anweisungen werden alle 20 Sekunden ausgefuehrt
   if (Break_60s < millis())
@@ -101,7 +107,7 @@ void loop()
     currentMin = ptm->tm_min;
     
     //MQTT Verbindungskontrolle und neu verbinden
-    if (MQTTclient.state() != 0)
+    if ((MQTTclient.state() != 0)&&(varConfig.NW_Flags&NW_MQTTActive))
     {
       if(WIFIConnectionCheck(false))
       {
@@ -117,45 +123,22 @@ void loop()
       sprintf(MQTTState, "MQTT Ready");
       WifiState[0] = 'W';
     }
-    /*
-    MQTT
-    -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
-    -3 : MQTT_CONNECTION_LOST - the network connection was broken
-    -2 : MQTT_CONNECT_FAILED - the network connection failed
-    -1 : MQTT_DISCONNECTED - the client is disconnected cleanly
-    0 : MQTT_CONNECTED - the client is connected
-    1 : MQTT_CONNECT_BAD_PROTOCOL - the server doesn't support the requested version of MQTT
-    2 : MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier
-    3 : MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection
-    4 : MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected
-    5 : MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect
-
-    WiFi
-    WL_NO_SHIELD        = 255,   // for compatibility with WiFi Shield library
-    WL_IDLE_STATUS      = 0,
-    WL_NO_SSID_AVAIL    = 1,
-    WL_SCAN_COMPLETED   = 2,
-    WL_CONNECTED        = 3,
-    WL_CONNECT_FAILED   = 4,
-    WL_CONNECTION_LOST  = 5,
-    WL_DISCONNECTED     = 6
-  */
-  }
-  //Anweisungen werden alle 10 Minuten ausgefuehrt
-  if (Break_10m < millis())
-  {
-    Break_10m = millis() + 600000;
   }
 
-  //Anweisungen werden alle 3600 Sekunden (1h) ausgefuehrt
-  if (Break_h < millis())
+  //Anweisungen werden alle 1 Sekunden ausgefuehrt
+  if (Break_1s < millis())
   {
-    Break_h = millis() + 3600000;
-    timeClient->update();
+    Break_1s = millis() + 1000;
+  }
+
+  //Anweisungen werden alle 200 Millisekunden ausgefuehrt
+  if (Break_200ms < millis())
+  {
+    Break_200ms = millis() + 200;
   }
 
   //MQTT wichtige Funktion
-  if(WiFi.status()== WL_CONNECTED)  //MQTTclient.loop() wichtig damit die Daten im Hintergrund empfangen werden
+  if((WiFi.status()== WL_CONNECTED)&&(varConfig.NW_Flags&NW_MQTTActive))  //MQTTclient.loop() wichtig damit die Daten im Hintergrund empfangen werden
   {
     if(!MQTTclient.loop())
     {
@@ -163,7 +146,6 @@ void loop()
       MQTTinit();
     }
   }
-
 }
 
 

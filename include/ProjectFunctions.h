@@ -1,14 +1,16 @@
 #ifndef ProjectFunctions
 #define ProjectFunctions
 #include <Arduino.h>
-#include "ProjectFunctions.h"
 
 
 void EinstSpeichern();
 void EinstLaden();
+void SaveProjectData();
+void LoadProjectData();
 char ResetVarLesen();
 void ResetVarSpeichern(char Count);
 
+void handleInterrupt();
 
 String IntToStr(int _var);
 String IntToStr(float _var);

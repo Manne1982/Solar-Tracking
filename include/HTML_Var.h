@@ -14,20 +14,20 @@ enum {subwl = 27767, subnw = 30574, subcn = 20035, subpd = 17488, subps = 21328,
 const String Un_Checked[2]{"","Checked"};
 const String varSelected[2]{"", " selected=\"\""};
 // const String De_Aktiviert[2]{"Deaktiviert","Aktiviert"};
-const String Ein_Aus[2]{"Aus","Ein"};
+//const String Ein_Aus[2]{"Aus","Ein"};
 // unsigned long BaudrateRelais = 9600;
 // unsigned long BaudrateDebug = 115200;
 
 //Menünamen                 0               1                 2                   3                 4               5               6                7               8          9              10           11          12              13            14            15            16      17            18              19        20            21          22         23         24        25            26
-const String MenuName[30]={"Allgemein", "Wasser St l", "Verbr. Ges m3", "Verbr. ml/sek", "Wasser Dif T", "Wasser Dif W", "Wasser Dif M", "Wasser St", "Wasser St Roh", "LED-Config", "Modus", "Speed", "Standard Dauer", "Kanalname", "Offset in %", "Dauer in %", "NW-Config", "Accesspoint", "SSID", "Statische IP", "IP-Adresse", "NW-Name", "Subnetmask", "Gateway", "DNS-Server", "Zeitserver", "Zeitoffset"};
-const String LEDMode[9]={"Farbe", "Rot", "Gruen", "Blau", "Weiss", "Flash", "Strobe", "Fade", "Smoth"};
+//const String MenuName[30]={"Allgemein", "Wasser St l", "Verbr. Ges m3", "Verbr. ml/sek", "Wasser Dif T", "Wasser Dif W", "Wasser Dif M", "Wasser St", "Wasser St Roh", "LED-Config", "Modus", "Speed", "Standard Dauer", "Kanalname", "Offset in %", "Dauer in %", "NW-Config", "Accesspoint", "SSID", "Statische IP", "IP-Adresse", "NW-Name", "Subnetmask", "Gateway", "DNS-Server", "Zeitserver", "Zeitoffset"};
+//const String LEDMode[9]={"Farbe", "Rot", "Gruen", "Blau", "Weiss", "Flash", "Strobe", "Fade", "Smoth"};
 
 
 const char html_header[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Beregnung</title>
+  <title>Solar Nachführung</title>
   <meta name="viewport" content="width=device-width, initial-scale=1", charset="UTF-8">
 </head>
 <body bgcolor=\"#BBFFFF\">
@@ -35,40 +35,37 @@ Uhrzeit: %s | Datum: %s, %02d.%02d.%d
 <br />
 <hr><h3>
 <a href=\>Startseite</a> | 
-<a href=\Prog\>Regnerprogramme</a> | 
-<a href=\Channel\>Kanal-Einstellungen</a> | 
-<a href=\LED-Config\>LED-Einstellungen</a> | 
 <a href=\Settings\>Einstellungen</a> | 
 
 </h3><hr>
 )rawliteral";
 const char html_Start[] PROGMEM = R"rawliteral(
-<h1>Beregnung Startseite</h1><hr>
+<h1>Solar Nachführung Startseite</h1><hr>
 <h2>Informationen</h2><br />
 <TABLE border="1">
   <TR>
     <TD WIDTH="250" VALIGN="TOP">
-      Fuellstand in Liter<br /></TD>
+      Startposition<br /></TD>
     <TD WIDTH="100" VALIGN="TOP">
-	  &nbsp %u l</TD>
+	  &nbsp %u</TD>
   </TR>
   <TR>
     <TD VALIGN="TOP">
-      Fuellstand in Prozent<br /></TD>
+      Endposition<br /></TD>
     <TD VALIGN="TOP">
-	  &nbsp %.1f %%</TD>
+	  &nbsp %u</TD>
   </TR>
   <TR>
     <TD VALIGN="TOP">
-      Wasserstand in cm<br /></TD>
+      Endanschlag<br /></TD>
     <TD VALIGN="TOP">
-	  &nbsp %u mm</TD>
+	  &nbsp %u</TD>
   </TR>
   <TR>
     <TD VALIGN="TOP">
-      Gesamtverbrauch in l<br /></TD>
+      Aktuelle Position<br /></TD>
     <TD VALIGN="TOP">
-	  &nbsp %d l</TD>
+	  &nbsp %u</TD>
   </TR>
 </TABLE>
 <br />
@@ -82,30 +79,6 @@ const char html_Start[] PROGMEM = R"rawliteral(
   <TR>
     <TD VALIGN="TOP">
       <a href=/DisplayOff>Display ausschalten</a><br /></TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
-      <a href=/LastMessages>Kommunikation Nano</a><br /></TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
-      <a href=/TouchInit>Touch-Tasten neu initialisieren</a><br /></TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
-      <a href=/DebugStart>Debug-Modus starten</a><br /></TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
-      <a href=/DebugEnd>Debug-Modus beenden</a><br /></TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
-      <a href=/DebugText>Debug-Text anzeigen</a><br /></TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
-      <a href=/DebugToggleWindow>Deburg-Text auf Display</a><br /></TD>
   </TR>
 </TABLE>
 <br />

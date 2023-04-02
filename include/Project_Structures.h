@@ -2,6 +2,12 @@
 #define Project_Structures
 #include <Arduino.h>
 
+#define OutputTurnOnOff D6
+#define OutputTurnDirection D5
+#define OutputRelais3 D4
+#define OutputRelais4 D3
+#define CounterPinPosition D7
+
 
 
 
@@ -31,15 +37,62 @@ struct NWConfig {
 
 enum {tmHour = 0, tmMinute = 1};
 enum {flagInitialised = 0x01, flagAutoModeOn = 0x02};
+enum {solOff, solWest, solEast};
+
 struct ProjectConfig {
-  uint8 Flags = 0; 
+  uint16 Flags = 0; 
   uint32 MaxPosition;
   uint32 CurrentPosition;
   uint32 StartPosition;
-  uint32 EndPositon;
-  uint8 StartTime[2];
-  uint8 EndTime[2];
+  uint32 EndPosition;
+  uint8 TimeStart[2];
+  uint8 TimeEnd[2];
+  uint8 TimeTurnBack[2];  
   uint16 BreakMinute;
+};
+class ProjectClass {
+  public:
+    ProjectClass();
+    ~ProjectClass();
+    void InitIO();
+    void TurnSolar(uint8 _value = solOff); 
+    void loop(); //Funktion have to included into main loop
+    void goToPosition(uint32 _Value);
+    void goToStart();
+    void goToEnd();
+
+    ProjectConfig * getSettings();
+    void setTimeStart(String _Clock);
+    void setTimeStop(String _Clock);
+    void setTimeTurnBack(String _Clock);
+    void setTime(String _Start, String _End, String _TurnBack);
+    void incrementCounter();
+    void decrementCounter();
+    void incrementCounterFailure();
+    uint16 resetCounterFailure(); //Return last Failure count befor reset
+    uint16 getCouterFailure();
+
+    void setMaxPosition(uint32 _Value);
+    uint32 getMaxPosition();
+    void setCurrentPosition(uint32 _Value);
+    uint32 getCurrentPosition();
+    void setStartPosition(uint32 _Value);
+    uint32 getStartPosition();
+    void setEndPosition(uint32 _Value);
+    uint32 getEndPosition();
+    uint8 getOutputSolarState();
+
+
+  private:
+    uint16 getMinutes(uint8 * _Time);
+    bool checkTime(uint8 * _Time); //Return true if it is OK
+    ProjectConfig * Settings;
+    uint16 counterFailure;
+    unsigned long OutputSolarLastChange;
+    const unsigned long OutputSolarChangeLock;
+    uint8 OutputSolarState;  
+    uint32 targetPosition;
+    uint8 AutoPositioningOn;
 };
 
 #include "Project_Structures.cpp"
