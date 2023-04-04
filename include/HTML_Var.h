@@ -5,22 +5,12 @@
 #include <pgmspace.h>
 #include <Arduino.h>
 
-//Definitionen fuer Datum und Uhrzeit
-// enum {clh, clmin}; //clh ist 0 fuer Uhrzeit-Stunden, clmin ist 1 fuer Uhrzeit Minuten
-// enum {dtYear, dtMonth, dtDay}; //Tag = 2; Monat = 1; Jahr = 0
 const String WeekDays[7]={"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
 // //Allgemeine Definitionen
 enum {subwl = 27767, subnw = 30574, subcn = 20035, subpd = 17488, subps = 21328, sublf = 17996, sublm = 19788, submq = 29037}; //Zuordnung der Submit-Bereiche einer Ganzzahl
 const String Un_Checked[2]{"","Checked"};
 const String varSelected[2]{"", " selected=\"\""};
-// const String De_Aktiviert[2]{"Deaktiviert","Aktiviert"};
-//const String Ein_Aus[2]{"Aus","Ein"};
-// unsigned long BaudrateRelais = 9600;
-// unsigned long BaudrateDebug = 115200;
-
-//Menünamen                 0               1                 2                   3                 4               5               6                7               8          9              10           11          12              13            14            15            16      17            18              19        20            21          22         23         24        25            26
-//const String MenuName[30]={"Allgemein", "Wasser St l", "Verbr. Ges m3", "Verbr. ml/sek", "Wasser Dif T", "Wasser Dif W", "Wasser Dif M", "Wasser St", "Wasser St Roh", "LED-Config", "Modus", "Speed", "Standard Dauer", "Kanalname", "Offset in %", "Dauer in %", "NW-Config", "Accesspoint", "SSID", "Statische IP", "IP-Adresse", "NW-Name", "Subnetmask", "Gateway", "DNS-Server", "Zeitserver", "Zeitoffset"};
-//const String LEDMode[9]={"Farbe", "Rot", "Gruen", "Blau", "Weiss", "Flash", "Strobe", "Fade", "Smoth"};
+const String varDisabled[2]{"", "disabled"};
 
 
 const char html_header[] PROGMEM = R"rawliteral(
@@ -29,31 +19,110 @@ const char html_header[] PROGMEM = R"rawliteral(
 <head>
   <title>Solar Nachführung</title>
   <meta name="viewport" content="width=device-width, initial-scale=1", charset="UTF-8">
+<style type="text/css">
+		table{color:black; background-color:#BBFFFF; padding-left:100px; padding-right:100px; padding-top:10px; padding-bottom:10px; border: 5px solid #808080;
+		font-family:verdana;}
+		td{color:black; background-color:#BBFFFF; padding-left:5px; padding-right:5px; padding-top:5px; padding-bottom:5px; font-family:verdana; text-align: center}
+    a:link{color:black;}
+		a:visited{color:blue;}
+		a:hover{background-color:black;
+						   	color:white;
+							font-weight:bold;}
+		a:active{background-color:blue;}
+input[type=button], input[type=submit], input[type=reset] {
+  background-color: #04AA6D;
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+input[disabled] {
+  background-color: grey;
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+
 </head>
 <body bgcolor=\"#BBFFFF\">
-Uhrzeit: %s | Datum: %s, %02d.%02d.%d
+%s
 <br />
 <hr><h3>
 <a href=\>Startseite</a> | 
-<a href=\Settings\>Einstellungen</a> | 
+<a href=\Settings\>Einstellungen</a>  
 
 </h3><hr>
 )rawliteral";
 const char html_Start[] PROGMEM = R"rawliteral(
 <h1>Solar Nachführung Startseite</h1><hr>
-<h2>Informationen</h2><br />
+<TABLE> <!-- 'border="1"-->
+  <TR>
+    <TD WIDTH="150" VALIGN="TOP">
+	  <form method="post" action="/POST">
+	  Auto Mode: 
+      <input name="cntAuto_hidden" value="1" type="hidden">
+      <input name="cntAuto" %s value="1" type="checkbox"> <br />
+	  <input value="OK" %s type="submit">
+	  </form>
+	  </TD>
+    <TD WIDTH="50" VALIGN="TOP">
+	  </TD>
+    <TD WIDTH="150" VALIGN="TOP">
+	  <form method="post" action="/POST">
+	  Referenzfahrt: 
+      <input name="cntRef_hidden" value="1" type="hidden">
+      <input name="cntRef" value="1" type="checkbox"> <br />
+	  <input value="OK" %s type="submit">
+	  </form>
+	  </TD>
+  <TR>
+    <TD VALIGN="TOP">
+	  <form method="post" action="/POST">
+      <input name="cntWest_hidden" value="1" type="hidden">
+	  <input value="Manu West" %s type="submit">
+	  </form>
+    <TD WIDTH="50" VALIGN="TOP">
+	  <form method="post" action="/POST">
+      <input name="cntStop_hidden" value="1" type="hidden">
+	  <input value="Manu Stop" %s type="submit">
+	  </form>
+	  </TD>
+    <TD VALIGN="TOP">
+	  <form method="post" action="/POST">
+      <input name="cntEast_hidden" value="1" type="hidden">
+	  <input value="Manu Ost" %s type="submit">
+	  </form>
+  </TR>
+</TABLE>
+<br />
 <TABLE border="1">
   <TR>
-    <TD WIDTH="250" VALIGN="TOP">
+    <form method="post" action="/POST">
+    <TD WIDTH="200" VALIGN="TOP">
       Startposition<br /></TD>
     <TD WIDTH="100" VALIGN="TOP">
-	  &nbsp %u</TD>
+	  <input name="posStart" value="%u" max="%u" min="0" type="number"> <br /></TD>
+    <TD WIDTH="200" VALIGN="TOP">
+	  <input value="OK" type="submit">
+	  </form>
+	  </TD>
   </TR>
   <TR>
+    <form method="post" action="/POST">
     <TD VALIGN="TOP">
       Endposition<br /></TD>
     <TD VALIGN="TOP">
-	  &nbsp %u</TD>
+	  <input name="posEnd" value="%u"  max="%u" min="0" type="number"> <br /></TD>
+    <TD VALIGN="TOP">
+	  <input value="OK" type="submit">
+	  </form>
+	  </TD>
   </TR>
   <TR>
     <TD VALIGN="TOP">
@@ -67,18 +136,46 @@ const char html_Start[] PROGMEM = R"rawliteral(
     <TD VALIGN="TOP">
 	  &nbsp %u</TD>
   </TR>
-</TABLE>
-<br />
-
-
-<h2>Zusatzfunktionen</h2><br />
-<TABLE> <!-- 'border="1"-->
-  <TR>
-    <TD WIDTH="220" VALIGN="TOP">
-      <a href=/DisplayOn>Display einschalten</a><br /></TD>
   <TR>
     <TD VALIGN="TOP">
-      <a href=/DisplayOff>Display ausschalten</a><br /></TD>
+      Zählfehler<br /></TD>
+    <TD VALIGN="TOP">
+	  &nbsp %u</TD>
+  </TR>
+</TABLE>
+<TABLE border="1">
+  <TR>
+    <form method="post" action="/POST">
+    <TD WIDTH="200" VALIGN="TOP">
+      Startzeit<br /></TD>
+    <TD WIDTH="100" VALIGN="TOP">
+	  <input name="tmStart" value="%s" type="time"> <br /></TD>
+    <TD WIDTH="200" VALIGN="TOP">
+	  <input value="OK" type="submit">
+	  </form>
+	  </TD>
+  </TR>
+  <TR>
+    <form method="post" action="/POST">
+    <TD VALIGN="TOP">
+      Endzeit<br /></TD>
+    <TD VALIGN="TOP">
+	  <input name="tmEnd" value="%s" type="time"> <br /></TD>
+    <TD VALIGN="TOP">
+	  <input value="OK" type="submit">
+	  </form>
+	  </TD>
+  </TR>
+  <TR>
+    <form method="post" action="/POST">
+    <TD VALIGN="TOP">
+      Heimfahrt<br /></TD>
+    <TD VALIGN="TOP">
+	  <input name="tmTurnBack" value="%s" type="time"> <br /></TD>
+    <TD VALIGN="TOP">
+	  <input value="OK" type="submit">
+	  </form>
+	  </TD>
   </TR>
 </TABLE>
 <br />
@@ -88,13 +185,13 @@ const char html_Start[] PROGMEM = R"rawliteral(
 
 
 const char html_NWconfig[] PROGMEM = R"rawliteral(
-<h1>Heizung Zusatzsteuerung NW Einstellungen</h1><hr>
+<h1>Solar Tracker Netzwerk Einstellungen</h1><hr>
 <h2>WLAN</h2>
 <form method="post" action="/POST">
 <TABLE>
   <TR>
     <TD WIDTH="120" VALIGN="TOP">
-    Access Poin: </TD>
+    Access Point: </TD>
     <TD WIDTH="300" VALIGN="TOP">
     <input name="wlAP" value="1" type="checkbox" %s> <br /><br /></TD>
   </TR>
@@ -122,18 +219,10 @@ const char html_NWconfig[] PROGMEM = R"rawliteral(
 <TABLE>
   <TR>
     <TD WIDTH="200" VALIGN="TOP">
-      Ethernet on: </TD>
-    <TD WIDTH="200" VALIGN="TOP">
-    <input name="nwEthernetOn" value="" type="checkbox"> <br /><br /></TD>
-    <TD WIDTH="200" VALIGN="TOP">
-    </TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
       Manuelle IP Konfiguration: </TD>
-    <TD VALIGN="TOP">
-    <input name="nwSIP" value="" type="checkbox"> <br /><br /></TD>
-    <TD VALIGN="TOP">
+    <TD WIDTH="200" VALIGN="TOP">
+    <input name="nwSIP" value="" type="checkbox" %s> <br /><br /></TD>
+    <TD WIDTH="200" VALIGN="TOP">
     </TD>
   </TR>
   <TR>
@@ -141,14 +230,6 @@ const char html_NWconfig[] PROGMEM = R"rawliteral(
       IP-Adresse: </TD>
   <TD>
       <input name="nwIP" type="text" minlength="7" maxlength="15" size="15" value="%s" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"><br /><br /></TD>
-    <TD VALIGN="TOP">
-       </TD>
-  </TR>
-  <TR>
-    <TD VALIGN="TOP">
-      IP-Adresse Ethernet: </TD>
-  <TD>
-      <input name="nwIPEthernet" type="text" minlength="7" maxlength="15" size="15" value="%s" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"><br /><br /></TD>
     <TD VALIGN="TOP">
        </TD>
   </TR>

@@ -10,7 +10,7 @@ void LoadProjectData();
 char ResetVarLesen();
 void ResetVarSpeichern(char Count);
 
-void handleInterrupt();
+void IRAM_ATTR handleInterrupt();
 
 String IntToStr(int _var);
 String IntToStr(float _var);

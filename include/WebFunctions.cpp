@@ -15,16 +15,14 @@ void WebserverRoot(AsyncWebServerRequest *request)
   char *Header_neu = new char[(strlen(html_header) + 50 + 50)];
   char *HTMLTemp = new char[(strlen(html_Start) + 100)];
   char *HTMLString = new char[(strlen(html_header) + 50)+(strlen(html_Start) + 100)];
-  //Vorbereitung Datum
-  unsigned long epochTime = timeClient->getEpochTime();
-  struct tm *ptm = gmtime((time_t *)&epochTime);
-  int monthDay = ptm->tm_mday;
-  int currentMonth = ptm->tm_mon + 1;
-  int currentYear = ptm->tm_year + 1900;
   HTMLTemp[0] = 0;
-  sprintf(Header_neu, html_header, timeClient->getFormattedTime().c_str(), WeekDays[timeClient->getDay()].c_str(), monthDay, currentMonth, currentYear);
-  //1. Fuellstand in L; 2. Fuellstand in Prozent; Wasserstand in mm; Fuellstand aenderung
-  sprintf(HTMLTemp, html_Start, varProject.getStartPosition(), varProject.getEndPosition(), varProject.getMaxPosition(), varProject.getCurrentPosition());
+  sprintf(Header_neu, html_header, varProject.getTimeString().c_str());
+  sprintf(HTMLTemp, html_Start, Un_Checked[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getIsNotInit()].c_str(), 
+  varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), 
+  varDisabled[varProject.getAutoStateFlag()].c_str(),
+  varProject.getStartPosition(), varProject.getMaxPosition(), varProject.getEndPosition(), 
+  varProject.getMaxPosition(), varProject.getMaxPosition(), varProject.getCurrentPosition(), varProject.getCouterFailure(),
+  varProject.getTimeStart().c_str(), varProject.getTimeEnd().c_str(), varProject.getTimeTurnBack().c_str());
   //Zusammenfassen der Einzelstrings
   sprintf(HTMLString, "%s%s", Header_neu, HTMLTemp);
   request->send_P(200, "text/html", HTMLString);
@@ -37,12 +35,6 @@ void WebserverSettings(AsyncWebServerRequest *request)
   char *Header_neu = new char[(strlen(html_header) + 50)];
   char *Body_neu = new char[(strlen(html_NWconfig)+750)];
   char *HTMLString = new char[(strlen(html_header) + 50)+(strlen(html_NWconfig)+750)];
-  //Vorbereitung Datum
-  unsigned long long epochTime = timeClient->getEpochTime();
-  struct tm *ptm = gmtime((time_t *)&epochTime);
-  int monthDay = ptm->tm_mday;
-  int currentMonth = ptm->tm_mon + 1;
-  int currentYear = ptm->tm_year + 1900;
 
   char *pntSelected[5];
   for (int i = 0; i < 5; i++)
@@ -50,7 +42,7 @@ void WebserverSettings(AsyncWebServerRequest *request)
       pntSelected[i] = (char *)varSelected[1].c_str();
     else
       pntSelected[i] = (char *)varSelected[0].c_str();
-  sprintf(Header_neu, html_header, timeClient->getFormattedTime().c_str(), WeekDays[timeClient->getDay()].c_str(), monthDay, currentMonth, currentYear);
+  sprintf(Header_neu, html_header, varProject.getTimeString().c_str());
   sprintf(Body_neu, html_NWconfig, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
               Un_Checked[(varConfig.NW_Flags & NW_StaticIP)/NW_StaticIP].c_str(), varConfig.NW_IPAddress, varConfig.NW_NetzName, varConfig.NW_SubMask, varConfig.NW_Gateway, varConfig.NW_DNS, 
               varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4], 
@@ -74,6 +66,48 @@ void WebserverPOST(AsyncWebServerRequest *request)
     submitBereich = (unsigned short int *)request->getParam(0)->name().c_str();
     switch (*submitBereich)
     {
+    case subwl:
+      varConfig.NW_Flags &= ~NW_WiFi_AP;
+      if(parameter <= 3)
+      for (int i = 0; i < parameter; i++)
+      {
+        if (request->getParam(i)->name() == "wlAP")
+          varConfig.NW_Flags |= NW_WiFi_AP;
+        else if (request->getParam(i)->name() == "wlSSID")
+        {
+          if (request->getParam(i)->value().length() < 40)
+            strcpy(varConfig.WLAN_SSID, request->getParam(i)->value().c_str());
+          else
+          {
+            request->send_P(200, "text/html", "SSID zu lang<form> <input type=\"button\" value=\"Go back!\" onclick=\"history.back()\"></form>");
+            return;
+          }
+        }
+        else if (request->getParam(i)->name() == "wlPassword")
+        {
+          if(request->getParam(i)->value()!="xxxxxx")
+          {
+            if ((request->getParam(i)->value().length() <= 60)&&(request->getParam(i)->value().length() >= 8))
+            { 
+              strcpy(varConfig.WLAN_Password, request->getParam(i)->value().c_str());
+            }
+            else
+            {
+              request->send_P(200, "text/html", "Passwortlaenge muss zwischen 8 und 60 Zeichen liegen<form> <input type=\"button\" value=\"Go back!\" onclick=\"history.back()\"></form>");
+              return;
+            }
+          }
+        }
+        else
+        {
+          request->send_P(200, "text/html", "Unbekannter Rueckgabewert<form> <input type=\"button\" value=\"Go back!\" onclick=\"history.back()\"></form>");
+          return;
+        }
+      }
+      request->send_P(200, "text/html", "Daten wurden uebernommen und ESP wird neu gestartet!<br><a href=\\Settings\\>Zurueck</a> <meta http-equiv=\"refresh\" content=\"20; URL=\\\">"); //<a href=\>Startseite</a>
+      EinstSpeichern();
+      ESP_Restart = true;
+      break;
     case subnw:
     {
       char tmp_StatischeIP = 0;
@@ -85,9 +119,7 @@ void WebserverPOST(AsyncWebServerRequest *request)
       if(parameter < 11)
       for (int i = 0; i < parameter; i++)
       {
-        if (request->getParam(i)->name() == "nwEthernetOn")
-          tmp_EthernetOn = 1;
-        else if (request->getParam(i)->name() == "nwSIP")
+        if (request->getParam(i)->name() == "nwSIP")
           tmp_StatischeIP = 1;
         else if (request->getParam(i)->name() == "nwIP")
           tmp_IPAddress[0] = request->getParam(i)->value();

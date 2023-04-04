@@ -8,7 +8,15 @@ OutputSolarLastChange(0),
 OutputSolarChangeLock(5000),
 OutputSolarState(0),
 targetPosition(0),
-AutoPositioningOn(0)
+AutoPositioningOn(0),
+anyPosChange(0),
+referenceState(0),
+LastPosChange(0),
+monthDay(0),
+currentMonth(0),
+currentYear(0),
+currentHour(0),
+currentMin(0)
 {
     Settings = new ProjectConfig;
     Settings->TimeEnd[tmHour] = 22;
@@ -17,11 +25,14 @@ AutoPositioningOn(0)
     Settings->TimeStart[tmMinute] = 0;
     Settings->TimeTurnBack[tmHour] = 4;
     Settings->TimeTurnBack[tmHour] = 0;
+    ntpUDP = new WiFiUDP;
+    timeClient = 0;
 }
 
 ProjectClass::~ProjectClass()
 {
     delete Settings;
+    delete ntpUDP;
 }
 void ProjectClass::InitIO()
 {
@@ -34,9 +45,59 @@ void ProjectClass::InitIO()
   pinMode(OutputRelais4, OUTPUT);
   digitalWrite(OutputRelais4, 1);
 
-  pinMode(CounterPinPosition, INPUT); 
+  pinMode(CounterPinPosition, INPUT_PULLUP); 
 }
+void ProjectClass::InitTimeClient(String _Server, long int _Offset)
+{
+    delay(1000);
+    timeClient = new NTPClient(*ntpUDP, _Server.c_str());
+    delay(1000);
+    timeClient->begin();
+    timeClient->setTimeOffset(_Offset);
+    delay(1000);
+    timeClient->update();
+}
+void ProjectClass::timeClientUpdate()
+{
+    timeClient->update();
+}
+void ProjectClass::checkSchedule()
+{
+    unsigned long long epochTime = timeClient->getEpochTime();
+    struct tm *ptm = gmtime((time_t *)&epochTime);
+    monthDay = ptm->tm_mday;
+    currentMonth = ptm->tm_mon + 1;
+    currentYear = ptm->tm_year + 1900;
+    currentHour = ptm->tm_hour;
+    currentMin = ptm->tm_min;
+    if(!(Settings->Flags&flagAutoModeOn)||!(Settings->Flags&flagInitialised))
+        return;
+    uint16 StartMinutes = getMinutes(Settings->TimeStart);
+    uint16 currentMinutes = currentHour * 60 + currentMin;
+    uint16 EndMinutes = getMinutes(Settings->TimeEnd);
+    if((currentMinutes>=getMinutes(Settings->TimeTurnBack))&&(currentMinutes < StartMinutes)&&(Settings->CurrentPosition > Settings->StartPosition)&&(OutputSolarState==solOff))
+    {
+        goToStart();
+    }
+    if((currentMinutes > EndMinutes)&&(Settings->CurrentPosition<Settings->EndPosition))
+    {
+        goToEnd();
+    }
+    if((StartMinutes > currentMinutes)||(EndMinutes < currentMinutes))
+        return;
+    uint16 quantityPosChanges = (EndMinutes - StartMinutes)/Settings->BreakMinute;
+    uint16 PositionSteps = (Settings->EndPosition - Settings->StartPosition)/quantityPosChanges;
+    uint16 start = ((EndMinutes - StartMinutes)%Settings->BreakMinute)/2;
 
+    if(!((currentMinutes + start - StartMinutes)%Settings->BreakMinute))
+        goToPosition(PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute));
+}
+String ProjectClass::getTimeString()
+{
+    char Temp[100];
+    sprintf(Temp, "Uhrzeit: %s | Datum: %s, %02d.%02d.%d", timeClient->getFormattedTime().c_str(), WeekDays[timeClient->getDay()].c_str(), monthDay, currentMonth, currentYear);
+    return Temp;
+}
 void ProjectClass::TurnSolar(uint8 _value)
 {
   switch (_value)
@@ -70,6 +131,11 @@ void ProjectClass::TurnSolar(uint8 _value)
 }
 void ProjectClass::loop()
 {
+    if(referenceState)
+    {
+        ReferenceLoop();
+        return;
+    }
     switch (OutputSolarState)
     {
     case solWest:
@@ -126,7 +192,14 @@ void ProjectClass::goToEnd()
 {
     goToPosition(getEndPosition());
 }
-
+uint8 ProjectClass::getAutoStateFlag()
+{
+    return ((Settings->Flags & flagAutoModeOn)/flagAutoModeOn);
+}
+uint8 ProjectClass::getIsNotInit()
+{
+    return ((Settings->Flags & flagInitialised)?0:1);
+}
 ProjectConfig * ProjectClass::getSettings()
 {
     return Settings;
@@ -219,14 +292,37 @@ void ProjectClass::setTime(String _Start, String _End, String _TurnBack)
     Settings->TimeTurnBack[tmHour] = tmpTurnBack[tmHour];
     Settings->TimeTurnBack[tmMinute] = tmpTurnBack[tmMinute];
 }
+String ProjectClass::getTimeStart()
+{
+    char Temp[10];
+    sprintf(Temp, "%02hhu:%02hhu", Settings->TimeStart[tmHour], Settings->TimeStart[tmMinute]);
+    return Temp;
+}
+String ProjectClass::getTimeEnd()
+{
+    char Temp[10];
+    sprintf(Temp, "%02hhu:%02hhu", Settings->TimeEnd[tmHour], Settings->TimeEnd[tmMinute]);
+    return Temp;
+}
+String ProjectClass::getTimeTurnBack()
+{
+    char Temp[10];
+    sprintf(Temp, "%02hhu:%02hhu", Settings->TimeTurnBack[tmHour], Settings->TimeTurnBack[tmMinute]);
+    return Temp;
+}
+
 void ProjectClass::incrementCounter()
 {
     Settings->CurrentPosition++;
+    anyPosChange=1;
 }
 void ProjectClass::decrementCounter()
 {
     if(Settings->CurrentPosition)
+    {
         Settings->CurrentPosition--;
+        anyPosChange=1;
+    }
 }
 void ProjectClass::incrementCounterFailure()
 {
@@ -290,8 +386,73 @@ uint8 ProjectClass::getOutputSolarState()
 {
     return OutputSolarState;
 }
-
-
+bool ProjectClass::anyChange()
+{
+    bool Temp = (anyPosChange==1);
+    anyPosChange = 0;
+    return Temp;
+}
+void ProjectClass::StartReference()
+{
+    referenceState = 1;
+}
+void ProjectClass::AbortReference()
+{
+    referenceState = 0;
+}
+void ProjectClass::ReferenceLoop()
+{
+    if(anyChange())
+    {
+        LastPosChange = millis();
+    }
+    switch (referenceState)
+    {
+    case 1:
+        Settings->Flags &= ~((uint16) flagInitialised);
+        TurnSolar(solWest);
+        LastPosChange = millis();
+        referenceState++;
+        break;
+    case 2:
+        if((LastPosChange + 10000) < millis())
+        {
+            Settings->CurrentPosition = -1;
+            TurnSolar(solOff);
+            LastPosChange = millis();
+            referenceState++;
+        }
+        break;
+    case 3:
+        if((LastPosChange + OutputSolarChangeLock) < millis())
+        {
+            TurnSolar(solEast);
+            LastPosChange = millis();
+            referenceState++;
+        }
+        break;
+    case 4:
+        if((LastPosChange + 10000) < millis())
+        {
+            TurnSolar(solOff);
+            Settings->MaxPosition = 0 - Settings->CurrentPosition + 1;
+            if(Settings->MaxPosition < 20)
+            {
+                referenceState = 0;
+                break;
+            }
+            Settings->CurrentPosition = 0;
+            Settings->EndPosition = Settings->MaxPosition -1;
+            Settings->StartPosition = 1;
+            Settings->Flags |= ((uint16) flagInitialised);
+            referenceState = 0;
+        }
+        break;
+    
+    default:
+        break;
+    }
+}
 uint16 ProjectClass::getMinutes(uint8 * _Time)
 {
     return (_Time[tmMinute]+(_Time[tmHour]*60));

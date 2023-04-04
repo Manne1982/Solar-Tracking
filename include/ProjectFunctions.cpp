@@ -14,8 +14,12 @@ void EinstSpeichern()
   for (unsigned long long i = 0; i < sizeof(varConfig); i++)
     Checksumme += pointer[i];
 
+  Serial.print("Gespeicherte Checksumme: ");
+  Serial.println(Checksumme);
+
+
   //EEPROM initialisieren
-  EEPROM.begin(sizeof(varConfig) + 5);
+  EEPROM.begin(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1);
 
   EEPROM.put(1, varConfig);
   EEPROM.put(sizeof(varConfig) + 1, Checksumme);
@@ -32,7 +36,7 @@ void EinstLaden()
   pointer = (unsigned char *)&varConfigTest;
   //EEPROM initialisieren
   unsigned int EEPROMSize;
-  EEPROMSize = sizeof(varConfig) + 5;
+  EEPROMSize = sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1;
   EEPROM.begin(EEPROMSize);
 
   EEPROM.get(1, varConfigTest);
@@ -43,12 +47,20 @@ void EinstLaden()
   if ((Checksumme == ChecksummeEEPROM) && (Checksumme != 0))
   {
     EEPROM.get(1, varConfig);
+    delay(200);
+    EEPROM.end(); // Free RAM copy of structure
   }
   else
-    Serial.println("Fehler beim Dateneinlesen");
-
-  delay(200);
-  EEPROM.end(); // Free RAM copy of structure
+  {
+    Serial.print("Checksumme: ");
+    Serial.print(Checksumme);
+    Serial.print("ChecksummeEEPROM: ");
+    Serial.println(ChecksummeEEPROM);
+    
+    Serial.println("Fehler beim Dateneinlesen (Allgemeine Einstellung)");
+    EEPROM.end(); // Free RAM copy of structure
+    EinstSpeichern();
+  }
 }
 //---------------------------------------------------------------------
 //Save and load current Project settings
@@ -57,13 +69,16 @@ void SaveProjectData()
   unsigned long int Checksumme = 0;
   unsigned char *pointer;
   pointer = (unsigned char *) varProject.getSettings();
-  for (unsigned long long i = 0; i < sizeof(varProject); i++)
+  for (unsigned long long i = 0; i < sizeof(*varProject.getSettings()); i++)
     Checksumme += pointer[i];
 
-  //EEPROM initialisieren
-  EEPROM.begin(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5);
+  Serial.print("Gespeicherte Checksumme (Projektdaten): ");
+  Serial.println(Checksumme);
 
-  EEPROM.put(sizeof(varConfig) + 5 + 1, varConfig);
+  //EEPROM initialisieren
+  EEPROM.begin(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1);
+
+  EEPROM.put(sizeof(varConfig) + 5 + 1, *varProject.getSettings());
   EEPROM.put(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 1, Checksumme);
 
   EEPROM.commit(); // Only needed for ESP8266 to get data written
@@ -78,7 +93,7 @@ void LoadProjectData()
   pointer = (unsigned char *)&varConfigTest;
   //EEPROM initialisieren
   unsigned int EEPROMSize;
-  EEPROMSize = sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5;
+  EEPROMSize = sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1;
   EEPROM.begin(EEPROMSize);
 
   EEPROM.get(sizeof(varConfig) + 5 + 1, varConfigTest);
@@ -89,12 +104,21 @@ void LoadProjectData()
   if ((Checksumme == ChecksummeEEPROM) && (Checksumme != 0))
   {
     EEPROM.get(sizeof(varConfig) + 5 + 1, *varProject.getSettings());
+    delay(200);
+    EEPROM.end(); // Free RAM copy of structure
   }
   else
-    Serial.println("Fehler beim Dateneinlesen");
+  {
+    Serial.print("Checksumme: ");
+    Serial.print(Checksumme);
+    Serial.print("ChecksummeEEPROM: ");
+    Serial.println(ChecksummeEEPROM);
+    
+    Serial.println("Fehler beim Dateneinlesen (Projektdaten)");
+    EEPROM.end(); // Free RAM copy of structure
+    SaveProjectData();
+  }
 
-  delay(200);
-  EEPROM.end(); // Free RAM copy of structure
 }
 //---------------------------------------------------------------------
 //Resetvariable die hochzaehlt bei vorzeitigem Stromverlust um auf Standard-Wert wieder zurueckzustellen.
@@ -119,7 +143,7 @@ char ResetVarLesen()
   return temp;
 }
 
-void handleInterrupt()
+void IRAM_ATTR handleInterrupt()
 {
   switch(varProject.getOutputSolarState())
   {

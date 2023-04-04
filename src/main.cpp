@@ -18,9 +18,12 @@
 #include "MQTT_Functions.h"
 #include "WiFiFunctions.h"
 
+#define BGTDEBUG 1
+
 void setup(void)
 {
   char ResetCount;
+  Serial.begin(9600);
   varProject.InitIO();
   attachInterrupt(digitalPinToInterrupt(CounterPinPosition), handleInterrupt, FALLING);
 
@@ -42,23 +45,21 @@ void setup(void)
     WiFi_Start_AP(varConfig.WLAN_SSID, varConfig.WLAN_Password);
   else
     WiFi_Start_STA(varConfig.WLAN_SSID, varConfig.WLAN_Password);
+  
+  delay(1000);
 
   //Zeitserver Einstellungen
   if (strlen(varConfig.NW_NTPServer))
-    timeClient = new NTPClient(ntpUDP, (const char *)varConfig.NW_NTPServer);
+    varProject.InitTimeClient(varConfig.NW_NTPServer, varConfig.NW_NTPOffset * 3600);
   else
-    timeClient = new NTPClient(ntpUDP, "fritz.box");
-  delay(1000);
-
-  timeClient->begin();
-  timeClient->setTimeOffset(varConfig.NW_NTPOffset * 3600);
+    varProject.InitTimeClient("fritz.box", varConfig.NW_NTPOffset * 3600);
 
   //MQTT
   MQTTinit();
 
   //OTA
-  ArduinoOTA.setHostname("SolarTracking");
-  ArduinoOTA.setPassword("SolarTracking!123");
+  ArduinoOTA.setHostname("SolarTracker");
+  ArduinoOTA.setPassword("SolarTracker!123");
   ArduinoOTA.begin();
   for(int i = 0; i<10; i++)
   {
@@ -79,13 +80,14 @@ void setup(void)
 
 void loop()
 {
+  
   //OTA
   ArduinoOTA.handle();
   //Anweisungen werden alle 3600 Sekunden (1h) ausgefuehrt
   if (Break_h < millis())
   {
     Break_h = millis() + 3600000;
-    timeClient->update();
+    varProject.timeClientUpdate();
   }
     //Anweisungen werden alle 10 Minuten ausgefuehrt
   if (Break_10m < millis())
@@ -98,14 +100,10 @@ void loop()
   {
     Break_60s = millis() + 60000;
     //Vorbereitung Datum
-    unsigned long epochTime = timeClient->getEpochTime();
-    struct tm *ptm = gmtime((time_t *)&epochTime);
-    monthDay = ptm->tm_mday;
-    currentMonth = ptm->tm_mon + 1;
-    currentYear = ptm->tm_year + 1900;
-    currentHour = ptm->tm_hour;
-    currentMin = ptm->tm_min;
-    
+    varProject.checkSchedule();
+
+    if(varProject.anyChange())
+      SaveProjectData();    
     //MQTT Verbindungskontrolle und neu verbinden
     if ((MQTTclient.state() != 0)&&(varConfig.NW_Flags&NW_MQTTActive))
     {
@@ -146,6 +144,14 @@ void loop()
       MQTTinit();
     }
   }
+  //Restart for WWW-Requests
+  if(ESP_Restart)
+  {
+    delay(1000);
+    ESP.restart();
+  }
+
+  varProject.loop();
 }
 
 

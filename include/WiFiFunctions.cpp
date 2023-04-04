@@ -74,7 +74,6 @@ bool WIFIConnectionCheck(bool with_reconnect = true)
     if(with_reconnect)
     {
       WiFi.reconnect();
-      sprintf(WifiLastChange, "(%d) %d:%d %d.%d.%d", WiFi.status(), currentHour, currentMin, monthDay, currentMonth, currentYear);
     }
     return false;
   }

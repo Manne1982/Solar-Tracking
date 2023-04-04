@@ -1,6 +1,8 @@
 #ifndef Project_Structures
 #define Project_Structures
 #include <Arduino.h>
+#include <NTPClient.h>
+
 
 #define OutputTurnOnOff D6
 #define OutputTurnDirection D5
@@ -15,7 +17,7 @@ enum {NW_WiFi_AP = 0x01, NW_StaticIP = 0x02, NW_EthernetActive = 0x04, NW_MQTTAc
 struct NWConfig {
   //Einstellungen NW-Einstellungen WLAN
   uint16 NW_Flags = 1; //See Enum NW_...
-  char WLAN_SSID[40] = "Regner";
+  char WLAN_SSID[40] = "SolarTracker";
   char WLAN_Password[70] = "";
   //Einstellungen NW-Einstellungen MQTT
   char MQTT_Server[50] = "192.168.178.2";
@@ -23,14 +25,14 @@ struct NWConfig {
   char MQTT_Username[20] = "Benutzer";
   char MQTT_Password[70] = "123456";
   char MQTT_fprint[70] = "";
-  char MQTT_rootpath[100] = "/Solar";
+  char MQTT_rootpath[100] = "/SolarTracker";
   //Einstellungen NW-Einstellungen Netzwerk
   char NW_StatischeIP = 0;
-  char NW_NetzName[20] = "Regner";
-  char NW_IPAddress[17] = "192.168.178.10";
+  char NW_NetzName[20] = "SolarTracker";
+  char NW_IPAddress[17] = "192.168.4.1";
   char NW_SubMask[17] = "255.255.255.0";
-  char NW_Gateway[17] = "192.168.178.1";
-  char NW_DNS[17] = "192.168.178.1";
+  char NW_Gateway[17] = "192.168.4.2";
+  char NW_DNS[17] = "192.168.4.2";
   char NW_NTPServer[55] = "fritz.box";
   char NW_NTPOffset = 0;
 };
@@ -55,17 +57,26 @@ class ProjectClass {
     ProjectClass();
     ~ProjectClass();
     void InitIO();
+    void InitTimeClient(String _Server, long int _Offset);
+    void timeClientUpdate();
+    void checkSchedule();
+    String getTimeString();
     void TurnSolar(uint8 _value = solOff); 
     void loop(); //Funktion have to included into main loop
     void goToPosition(uint32 _Value);
     void goToStart();
     void goToEnd();
+    uint8 getAutoStateFlag();
+    uint8 getIsNotInit();
 
     ProjectConfig * getSettings();
     void setTimeStart(String _Clock);
     void setTimeStop(String _Clock);
     void setTimeTurnBack(String _Clock);
     void setTime(String _Start, String _End, String _TurnBack);
+    String getTimeStart();
+    String getTimeEnd();
+    String getTimeTurnBack();
     void incrementCounter();
     void decrementCounter();
     void incrementCounterFailure();
@@ -81,18 +92,34 @@ class ProjectClass {
     void setEndPosition(uint32 _Value);
     uint32 getEndPosition();
     uint8 getOutputSolarState();
+    bool anyChange();
+    void StartReference();
+    void AbortReference();
 
 
   private:
     uint16 getMinutes(uint8 * _Time);
     bool checkTime(uint8 * _Time); //Return true if it is OK
+    void ReferenceLoop();
     ProjectConfig * Settings;
     uint16 counterFailure;
     unsigned long OutputSolarLastChange;
     const unsigned long OutputSolarChangeLock;
     uint8 OutputSolarState;  
     uint32 targetPosition;
-    uint8 AutoPositioningOn;
+    uint8 AutoPositioningOn;      //Automode ON
+    uint8 anyPosChange;
+    uint8 referenceState;
+    unsigned long LastPosChange;
+    //Uhrzeit Variablen
+    WiFiUDP *ntpUDP;
+    NTPClient *timeClient;
+    int monthDay;                                          //Variablen für die aktuelle Zeit
+    int currentMonth;
+    int currentYear;
+    int currentHour;
+    int currentMin;
+
 };
 
 #include "Project_Structures.cpp"
