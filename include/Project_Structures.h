@@ -66,6 +66,8 @@ class ProjectClass {
     void goToPosition(uint32 _Value);
     void goToStart();
     void goToEnd();
+    void startAutoMode();
+    void stopAutoMode();
     uint8 getAutoStateFlag();
     uint8 getIsNotInit();
 
@@ -74,9 +76,12 @@ class ProjectClass {
     void setTimeStop(String _Clock);
     void setTimeTurnBack(String _Clock);
     void setTime(String _Start, String _End, String _TurnBack);
+    void setTimeAutoBreak(uint16 _Minutes);
+    uint16 getTimeAutoBreak();
     String getTimeStart();
     String getTimeEnd();
     String getTimeTurnBack();
+    uint16 getMinutes(String _Time);
     void incrementCounter();
     void decrementCounter();
     void incrementCounterFailure();

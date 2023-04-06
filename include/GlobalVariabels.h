@@ -5,6 +5,8 @@
 #include "ESPAsyncWebServer.h"
 #include "Project_Structures.h"
 
+#define BGTDEBUG 1
+
 //Projektvariablen
 NWConfig varConfig;
 ProjectClass varProject;

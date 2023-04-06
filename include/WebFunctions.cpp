@@ -13,7 +13,7 @@ void notFound(AsyncWebServerRequest *request)
 void WebserverRoot(AsyncWebServerRequest *request)
 {
   char *Header_neu = new char[(strlen(html_header) + 50 + 50)];
-  char *HTMLTemp = new char[(strlen(html_Start) + 100)];
+  char *HTMLTemp = new char[(strlen(html_Start) + 200)];
   char *HTMLString = new char[(strlen(html_header) + 50)+(strlen(html_Start) + 100)];
   HTMLTemp[0] = 0;
   sprintf(Header_neu, html_header, varProject.getTimeString().c_str());
@@ -22,7 +22,8 @@ void WebserverRoot(AsyncWebServerRequest *request)
   varDisabled[varProject.getAutoStateFlag()].c_str(),
   varProject.getStartPosition(), varProject.getMaxPosition(), varProject.getEndPosition(), 
   varProject.getMaxPosition(), varProject.getMaxPosition(), varProject.getCurrentPosition(), varProject.getCouterFailure(),
-  varProject.getTimeStart().c_str(), varProject.getTimeEnd().c_str(), varProject.getTimeTurnBack().c_str());
+  varProject.getTimeStart().c_str(), varProject.getTimeEnd().c_str(), varProject.getTimeTurnBack().c_str(), varProject.getTimeAutoBreak());
+
   //Zusammenfassen der Einzelstrings
   sprintf(HTMLString, "%s%s", Header_neu, HTMLTemp);
   request->send_P(200, "text/html", HTMLString);
@@ -218,6 +219,117 @@ void WebserverPOST(AsyncWebServerRequest *request)
       EinstSpeichern();
       request->send_P(200, "text/html", "MQTT Daten wurden uebernommen, ESP startet neu!<br><meta http-equiv=\"refresh\" content=\"20; URL=\\\">"); //<a href=\>Startseite</a>
       ESP_Restart = true;
+      break;
+    }
+    case subcn:
+    {
+      uint16 CheckboxSet = 0;
+      if(parameter <= 2)
+      for (int i = 0; i < parameter; i++)
+      {
+        uint8 Temp = 0;
+        if(sscanf(request->getParam(i)->name().c_str(), "cnt%hhu", &Temp) == 1)
+        {
+          switch (Temp)
+          {
+          case 11:
+            if(CheckboxSet == 12)
+            {
+              varProject.startAutoMode();
+              WebserverRoot(request);
+            }
+            else
+            {
+              varProject.stopAutoMode();
+              WebserverRoot(request);
+            }
+            break;
+          case 12:
+            CheckboxSet = 12;
+            break;
+          case 21:
+            if(CheckboxSet == 22)
+            {
+              varProject.StartReference();
+              WebserverRoot(request);
+            }
+            else
+            {
+              varProject.AbortReference();
+              WebserverRoot(request);
+            }
+            break;
+          case 22:
+            CheckboxSet = 22;
+            break;
+          case 31:
+            varProject.TurnSolar(solWest);
+            WebserverRoot(request);
+            break;
+          case 41:
+            varProject.TurnSolar(solOff);
+            WebserverRoot(request);
+            break;
+          case 51:
+            varProject.TurnSolar(solEast);
+            WebserverRoot(request);
+            break;
+          
+          default:
+            break;
+          }
+        }
+      }
+      break;
+    }
+    case subtm:
+    {
+      String ZeitenTemp[4];
+      uint16 TempMinuten[4] = {0, 0, 0, 0};
+      if(parameter == 4)
+      {
+        for (int i = 0; i < parameter; i++)
+        {
+          uint8 Temp = 0;
+          if(sscanf(request->getParam(i)->name().c_str(), "tm%hhu", &Temp) == 1)
+          {
+            switch (Temp)
+            {
+            case 1://StartTime
+            case 2://EndTime
+            case 3://TurnBack
+              ZeitenTemp[Temp-1]= request->getParam(Temp-1)->value();
+              TempMinuten[Temp-1] = varProject.getMinutes(request->getParam(Temp-1)->value());
+              break;
+            case 4:
+              TempMinuten[3] = request->getParam(3)->value().toInt();
+              break;
+            default:
+              request->send_P(200, "text/html", "Falscher Parametername!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+              return;
+            }
+          }
+        }
+      }
+      else
+      {
+        request->send_P(200, "text/html", "Parameteranzahl falsch!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+        return;
+      }
+      if((TempMinuten[0] < TempMinuten[1])&&((TempMinuten[2]<TempMinuten[0])||(TempMinuten[2]>TempMinuten[1]))&&((TempMinuten[1]-TempMinuten[0])>(5*TempMinuten[3])))
+      {
+        varProject.setTime(ZeitenTemp[0], ZeitenTemp[1], ZeitenTemp[2]);
+        varProject.setTimeAutoBreak(TempMinuten[3]);
+        request->send_P(200, "text/html", "Neue Zeiteinstellung wurde uebernommen!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+      }
+      else
+      {
+        request->send_P(200, "text/html", "Fehler, neue Zeiteinstellung nicht uebernommen!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+      }
+      break;
+    }
+    case subpo:
+    {
       break;
     }
     default:

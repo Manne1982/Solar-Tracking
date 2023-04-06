@@ -192,6 +192,14 @@ void ProjectClass::goToEnd()
 {
     goToPosition(getEndPosition());
 }
+void ProjectClass::startAutoMode()
+{
+    Settings->Flags = Settings->Flags | flagAutoModeOn;
+}
+void ProjectClass::stopAutoMode()
+{
+    Settings->Flags = Settings->Flags & ~((uint16) flagAutoModeOn);
+}
 uint8 ProjectClass::getAutoStateFlag()
 {
     return ((Settings->Flags & flagAutoModeOn)/flagAutoModeOn);
@@ -282,6 +290,7 @@ void ProjectClass::setTime(String _Start, String _End, String _TurnBack)
     tempMinTurnBack = getMinutes(tmpTurnBack);
 
     if(tempMinStop <= tempMinStart)
+        return;
     if((tempMinTurnBack >= tempMinStart)&&(tempMinTurnBack <= tempMinStop))
         return;
 
@@ -291,6 +300,14 @@ void ProjectClass::setTime(String _Start, String _End, String _TurnBack)
     Settings->TimeEnd[tmMinute] = tmpStop[tmMinute];
     Settings->TimeTurnBack[tmHour] = tmpTurnBack[tmHour];
     Settings->TimeTurnBack[tmMinute] = tmpTurnBack[tmMinute];
+}
+void ProjectClass::setTimeAutoBreak(uint16 _Minutes)
+{
+    Settings->BreakMinute = _Minutes;
+}
+uint16 ProjectClass::getTimeAutoBreak()
+{
+    return Settings->BreakMinute;
 }
 String ProjectClass::getTimeStart()
 {
@@ -456,6 +473,15 @@ void ProjectClass::ReferenceLoop()
 uint16 ProjectClass::getMinutes(uint8 * _Time)
 {
     return (_Time[tmMinute]+(_Time[tmHour]*60));
+}
+uint16 ProjectClass::getMinutes(String _Time)
+{
+    uint8 Temp[2];
+    if(sscanf(_Time.c_str(), "%hhu:%hhu", &Temp[tmHour], &Temp[tmMinute])!=2)
+        return 0;
+    if((Temp[tmHour] >= 24)||(Temp[tmMinute] >= 60))
+        return 0;
+    return (getMinutes(Temp));
 }
 bool ProjectClass::checkTime(uint8 * _Time)
 {

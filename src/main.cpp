@@ -18,7 +18,7 @@
 #include "MQTT_Functions.h"
 #include "WiFiFunctions.h"
 
-#define BGTDEBUG 1
+
 
 void setup(void)
 {

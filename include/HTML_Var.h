@@ -7,7 +7,7 @@
 
 const String WeekDays[7]={"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
 // //Allgemeine Definitionen
-enum {subwl = 27767, subnw = 30574, subcn = 20035, subpd = 17488, subps = 21328, sublf = 17996, sublm = 19788, submq = 29037}; //Zuordnung der Submit-Bereiche einer Ganzzahl
+enum {subwl = 27767, subnw = 30574, subcn = 28259, subpd = 17488, subps = 21328, sublf = 17996, sublm = 19788, submq = 29037, subpo = 28528, subtm = 28020}; //Zuordnung der Submit-Bereiche einer Ganzzahl
 const String Un_Checked[2]{"","Checked"};
 const String varSelected[2]{"", " selected=\"\""};
 const String varDisabled[2]{"", "disabled"};
@@ -66,8 +66,8 @@ const char html_Start[] PROGMEM = R"rawliteral(
     <TD WIDTH="150" VALIGN="TOP">
 	  <form method="post" action="/POST">
 	  Auto Mode: 
-      <input name="cntAuto_hidden" value="1" type="hidden">
-      <input name="cntAuto" %s value="1" type="checkbox"> <br />
+      <input name="cnt12" %s value="1" type="checkbox"> <br />
+      <input name="cnt11" value="1" type="hidden">
 	  <input value="OK" %s type="submit">
 	  </form>
 	  </TD>
@@ -76,26 +76,26 @@ const char html_Start[] PROGMEM = R"rawliteral(
     <TD WIDTH="150" VALIGN="TOP">
 	  <form method="post" action="/POST">
 	  Referenzfahrt: 
-      <input name="cntRef_hidden" value="1" type="hidden">
-      <input name="cntRef" value="1" type="checkbox"> <br />
+      <input name="cnt22" value="1" type="checkbox"> <br />
+      <input name="cnt21" value="1" type="hidden">
 	  <input value="OK" %s type="submit">
 	  </form>
 	  </TD>
   <TR>
     <TD VALIGN="TOP">
 	  <form method="post" action="/POST">
-      <input name="cntWest_hidden" value="1" type="hidden">
+      <input name="cnt31" value="1" type="hidden">
 	  <input value="Manu West" %s type="submit">
 	  </form>
     <TD WIDTH="50" VALIGN="TOP">
 	  <form method="post" action="/POST">
-      <input name="cntStop_hidden" value="1" type="hidden">
+      <input name="cnt41" value="1" type="hidden">
 	  <input value="Manu Stop" %s type="submit">
 	  </form>
 	  </TD>
     <TD VALIGN="TOP">
 	  <form method="post" action="/POST">
-      <input name="cntEast_hidden" value="1" type="hidden">
+      <input name="cnt51" value="1" type="hidden">
 	  <input value="Manu Ost" %s type="submit">
 	  </form>
   </TR>
@@ -107,22 +107,18 @@ const char html_Start[] PROGMEM = R"rawliteral(
     <TD WIDTH="200" VALIGN="TOP">
       Startposition<br /></TD>
     <TD WIDTH="100" VALIGN="TOP">
-	  <input name="posStart" value="%u" max="%u" min="0" type="number"> <br /></TD>
-    <TD WIDTH="200" VALIGN="TOP">
+	  <input name="pos1" value="%u" max="%u" min="0" type="number"> <br /></TD>
+    <TD rowspan="2" WIDTH="200" VALIGN="TOP">
 	  <input value="OK" type="submit">
-	  </form>
 	  </TD>
   </TR>
   <TR>
-    <form method="post" action="/POST">
     <TD VALIGN="TOP">
       Endposition<br /></TD>
     <TD VALIGN="TOP">
-	  <input name="posEnd" value="%u"  max="%u" min="0" type="number"> <br /></TD>
-    <TD VALIGN="TOP">
-	  <input value="OK" type="submit">
+	  <input name="pos2" value="%u"  max="%u" min="0" type="number"> <br />
 	  </form>
-	  </TD>
+    </TD>
   </TR>
   <TR>
     <TD VALIGN="TOP">
@@ -149,34 +145,30 @@ const char html_Start[] PROGMEM = R"rawliteral(
     <TD WIDTH="200" VALIGN="TOP">
       Startzeit<br /></TD>
     <TD WIDTH="100" VALIGN="TOP">
-	  <input name="tmStart" value="%s" type="time"> <br /></TD>
-    <TD WIDTH="200" VALIGN="TOP">
+	  <input name="tm1" value="%s" type="time"> <br /></TD>
+    <TD rowspan="4" WIDTH="200" VALIGN="TOP">
 	  <input value="OK" type="submit">
-	  </form>
 	  </TD>
   </TR>
   <TR>
-    <form method="post" action="/POST">
     <TD VALIGN="TOP">
       Endzeit<br /></TD>
     <TD VALIGN="TOP">
-	  <input name="tmEnd" value="%s" type="time"> <br /></TD>
-    <TD VALIGN="TOP">
-	  <input value="OK" type="submit">
-	  </form>
-	  </TD>
+	  <input name="tm2" value="%s" type="time"> <br /></TD>
   </TR>
   <TR>
-    <form method="post" action="/POST">
     <TD VALIGN="TOP">
       Heimfahrt<br /></TD>
     <TD VALIGN="TOP">
-	  <input name="tmTurnBack" value="%s" type="time"> <br /></TD>
-    <TD VALIGN="TOP">
-	  <input value="OK" type="submit">
-	  </form>
-	  </TD>
+	  <input name="tm3" value="%s" type="time"> <br /></TD>
   </TR>
+  <TR>
+    <TD VALIGN="TOP">
+      Wartezeit in Min<br /></TD>
+    <TD VALIGN="TOP">
+	  <input name="tm4" value="%u"  max="300" min="5" type="number"> <br /></TD>
+  </TR>
+  </form>
 </TABLE>
 <br />
 </body>
