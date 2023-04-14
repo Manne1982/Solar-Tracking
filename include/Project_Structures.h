@@ -38,8 +38,8 @@ struct NWConfig {
 };
 
 enum {tmHour = 0, tmMinute = 1};
-enum {flagInitialised = 0x01, flagAutoModeOn = 0x02};
-enum {solOff, solWest, solEast};
+enum {flagInitialised = 0x01, flagAutoModeOn = 0x02, flagError = 0x04};
+enum {solOff, solWest, solEast, solWestRunAfter, solEastRunAfter};
 
 struct ProjectConfig {
   uint16 Flags = 0; 
@@ -100,6 +100,9 @@ class ProjectClass {
     bool anyChange();
     void StartReference();
     void AbortReference();
+    uint8 getReferenceState();
+    void resetErrorFlag();
+    uint8 isError(); //is Error-Flag set
 
 
   private:
@@ -109,8 +112,9 @@ class ProjectClass {
     ProjectConfig * Settings;
     uint16 counterFailure;
     unsigned long OutputSolarLastChange;
-    const unsigned long OutputSolarChangeLock;
+    const uint16 OutputSolarChangeLock;
     uint8 OutputSolarState;  
+    uint8 OutputSolarStateBefore;
     uint32 targetPosition;
     uint8 AutoPositioningOn;      //Automode ON
     uint8 anyPosChange;

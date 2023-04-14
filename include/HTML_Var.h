@@ -11,6 +11,7 @@ enum {subwl = 27767, subnw = 30574, subcn = 28259, subpd = 17488, subps = 21328,
 const String Un_Checked[2]{"","Checked"};
 const String varSelected[2]{"", " selected=\"\""};
 const String varDisabled[2]{"", "disabled"};
+const String varError[2]{"Alles OK", "Fehler"};
 
 
 const char html_header[] PROGMEM = R"rawliteral(
@@ -51,7 +52,7 @@ input[disabled] {
 
 </head>
 <body bgcolor=\"#BBFFFF\">
-%s
+%s | Status: %s
 <br />
 <hr><h3>
 <a href=\>Startseite</a> | 
@@ -167,8 +168,16 @@ const char html_Start[] PROGMEM = R"rawliteral(
       Wartezeit in Min<br /></TD>
     <TD VALIGN="TOP">
 	  <input name="tm4" value="%u"  max="300" min="5" type="number"> <br /></TD>
+    </form>
   </TR>
-  </form>
+  <TR>
+    <TD VALIGN="TOP">
+    <form method="post" action="/POST">
+      <input name="cnt61" value="1" type="hidden">
+	    <input value="Reset Fehler" type="submit">
+      <br /></TD>
+    </form>
+  </TR>
 </TABLE>
 <br />
 </body>

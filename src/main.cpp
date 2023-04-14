@@ -22,19 +22,33 @@
 
 void setup(void)
 {
-  char ResetCount;
+  uint8 ResetCount;
   Serial.begin(9600);
   varProject.InitIO();
   attachInterrupt(digitalPinToInterrupt(CounterPinPosition), handleInterrupt, FALLING);
-
+ 
   ResetCount = ResetVarLesen();
-  if((ResetCount < 0)||(ResetCount > 5))  //Prüfen ob Wert Plausibel, wenn nicht rücksetzen
+  if(ResetCount > 10)  //Prüfen ob Wert Plausibel, wenn nicht rücksetzen
+  {
     ResetCount = 0;
+    ResetVarSpeichern(ResetCount);
+  }
+  else
+    ResetCount++;
+  //OTA
+  ArduinoOTA.setHostname("SolarTracker");
+  ArduinoOTA.setPassword("SolarTracker!123");
+  ArduinoOTA.begin();
+  for(int i = 0; i<10; i++)
+  {
+    //OTA
+    ArduinoOTA.handle();
+    delay(1000);
+  }
 
-    //ResetCount++;
-  ResetVarSpeichern(ResetCount);
+
   delay(1000);
-  if (ResetCount < 5) //Wenn nicht 5 mal in den ersten 5 Sekunden der Startvorgang abgebrochen wurde
+  if (ResetCount < 5) //Wenn nicht 5 mal in den ersten 10 Sekunden der Startvorgang abgebrochen wurde
   {
     EinstLaden();
     LoadProjectData();
@@ -57,16 +71,6 @@ void setup(void)
   //MQTT
   MQTTinit();
 
-  //OTA
-  ArduinoOTA.setHostname("SolarTracker");
-  ArduinoOTA.setPassword("SolarTracker!123");
-  ArduinoOTA.begin();
-  for(int i = 0; i<10; i++)
-  {
-    //OTA
-    ArduinoOTA.handle();
-    delay(1000);
-  }
 
   //Webserver
   server.onNotFound(notFound);
@@ -99,11 +103,10 @@ void loop()
   if (Break_60s < millis())
   {
     Break_60s = millis() + 60000;
-    //Vorbereitung Datum
-    varProject.checkSchedule();
 
     if(varProject.anyChange())
       SaveProjectData();    
+
     //MQTT Verbindungskontrolle und neu verbinden
     if ((MQTTclient.state() != 0)&&(varConfig.NW_Flags&NW_MQTTActive))
     {
@@ -124,9 +127,11 @@ void loop()
   }
 
   //Anweisungen werden alle 1 Sekunden ausgefuehrt
-  if (Break_1s < millis())
+  if (Break_10s < millis())
   {
-    Break_1s = millis() + 1000;
+    Break_10s = millis() + 10000;
+    //Vorbereitung Datum
+    varProject.checkSchedule();
   }
 
   //Anweisungen werden alle 200 Millisekunden ausgefuehrt

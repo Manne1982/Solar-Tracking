@@ -148,9 +148,11 @@ void IRAM_ATTR handleInterrupt()
   switch(varProject.getOutputSolarState())
   {
     case solWest:
+    case solWestRunAfter:
       varProject.incrementCounter();
       break;
     case solEast:
+    case solEastRunAfter:
       varProject.decrementCounter();
       break;
     default:

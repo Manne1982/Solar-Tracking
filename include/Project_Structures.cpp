@@ -7,6 +7,7 @@ counterFailure(0),
 OutputSolarLastChange(0),
 OutputSolarChangeLock(5000),
 OutputSolarState(0),
+OutputSolarStateBefore(0),
 targetPosition(0),
 AutoPositioningOn(0),
 anyPosChange(0),
@@ -75,11 +76,12 @@ void ProjectClass::checkSchedule()
     uint16 StartMinutes = getMinutes(Settings->TimeStart);
     uint16 currentMinutes = currentHour * 60 + currentMin;
     uint16 EndMinutes = getMinutes(Settings->TimeEnd);
-    if((currentMinutes>=getMinutes(Settings->TimeTurnBack))&&(currentMinutes < StartMinutes)&&(Settings->CurrentPosition > Settings->StartPosition)&&(OutputSolarState==solOff))
+    if((currentMinutes>=getMinutes(Settings->TimeTurnBack))&&((currentMinutes < StartMinutes)||(currentMinutes > EndMinutes))&&(Settings->CurrentPosition > Settings->StartPosition)&&(OutputSolarState==solOff))
     {
         goToStart();
+        return;
     }
-    if((currentMinutes > EndMinutes)&&(Settings->CurrentPosition<Settings->EndPosition))
+    if((currentMinutes >= EndMinutes)&&(Settings->CurrentPosition<Settings->EndPosition))
     {
         goToEnd();
     }
@@ -100,6 +102,8 @@ String ProjectClass::getTimeString()
 }
 void ProjectClass::TurnSolar(uint8 _value)
 {
+    if(Settings->Flags & flagError)
+        _value = solOff;
   switch (_value)
   {
   case solOff:
@@ -109,20 +113,32 @@ void ProjectClass::TurnSolar(uint8 _value)
     OutputSolarState = solOff;
     break;
   case solWest:
-    if(((OutputSolarLastChange + OutputSolarChangeLock)>millis())||(OutputSolarState == solEast))
+    if(((OutputSolarLastChange + OutputSolarChangeLock)>millis()))
+    break;
+    if(OutputSolarState == solEast)
+    {
+      TurnSolar(solOff);
       break;
+    }
     digitalWrite(OutputTurnDirection, 1);
     digitalWrite(OutputTurnOnOff, 0);
     OutputSolarLastChange = millis();
     OutputSolarState = solWest;
+    OutputSolarStateBefore = solWest;
     break;
   case solEast:
-    if(((OutputSolarLastChange + OutputSolarChangeLock)>millis())||(OutputSolarState == solWest))
+    if(((OutputSolarLastChange + OutputSolarChangeLock)>millis()))
+    break;
+    if(OutputSolarState == solWest)
+    {
+      TurnSolar(solOff);
       break;
+    }
     digitalWrite(OutputTurnDirection, 0);
     digitalWrite(OutputTurnOnOff, 0);
     OutputSolarLastChange = millis();
     OutputSolarState = solEast;
+    OutputSolarStateBefore = solEast;
     break;
   
   default:
@@ -131,15 +147,26 @@ void ProjectClass::TurnSolar(uint8 _value)
 }
 void ProjectClass::loop()
 {
+    if(anyChange())
+    {
+        LastPosChange = millis();
+    }
     if(referenceState)
     {
         ReferenceLoop();
         return;
     }
+    if(((LastPosChange + 10000) < millis()) && (OutputSolarState!=solOff))
+    {
+        TurnSolar(solOff);
+        Settings->Flags |= flagError;
+    }
+    if(!AutoPositioningOn)
+        return;
     switch (OutputSolarState)
     {
     case solWest:
-        if(getCurrentPosition() >= targetPosition)
+        if((getCurrentPosition() >= targetPosition)||(getCurrentPosition() == Settings->MaxPosition))
         {
             TurnSolar(solOff);
             targetPosition = 0;
@@ -147,7 +174,7 @@ void ProjectClass::loop()
         }
         break;
     case solEast:
-        if(getCurrentPosition() <= targetPosition)
+        if((getCurrentPosition() <= targetPosition)||(getCurrentPosition() == 0))
         {
             TurnSolar(solOff);
             targetPosition = 0;
@@ -344,6 +371,7 @@ void ProjectClass::decrementCounter()
 void ProjectClass::incrementCounterFailure()
 {
     counterFailure++;
+    Settings->Flags &= ~((uint16) flagInitialised | (uint16) flagAutoModeOn);
 }
 uint16 ProjectClass::resetCounterFailure()
 {
@@ -401,6 +429,8 @@ uint32 ProjectClass::getEndPosition()
 }
 uint8 ProjectClass::getOutputSolarState()
 {
+    if((OutputSolarState == solOff) && (millis()<(OutputSolarLastChange + OutputSolarChangeLock)))
+        return OutputSolarStateBefore + 2;
     return OutputSolarState;
 }
 bool ProjectClass::anyChange()
@@ -417,12 +447,20 @@ void ProjectClass::AbortReference()
 {
     referenceState = 0;
 }
+uint8 ProjectClass::getReferenceState()
+{
+    return referenceState;
+}
+void ProjectClass::resetErrorFlag()
+{
+    Settings->Flags &=  ~((uint16) flagError);
+}
+uint8 ProjectClass::isError()
+{
+    return (Settings->Flags & flagError) / flagError;
+}
 void ProjectClass::ReferenceLoop()
 {
-    if(anyChange())
-    {
-        LastPosChange = millis();
-    }
     switch (referenceState)
     {
     case 1:

@@ -16,7 +16,7 @@ void WebserverRoot(AsyncWebServerRequest *request)
   char *HTMLTemp = new char[(strlen(html_Start) + 200)];
   char *HTMLString = new char[(strlen(html_header) + 50)+(strlen(html_Start) + 100)];
   HTMLTemp[0] = 0;
-  sprintf(Header_neu, html_header, varProject.getTimeString().c_str());
+  sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str());
   sprintf(HTMLTemp, html_Start, Un_Checked[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getIsNotInit()].c_str(), 
   varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), 
   varDisabled[varProject.getAutoStateFlag()].c_str(),
@@ -43,7 +43,7 @@ void WebserverSettings(AsyncWebServerRequest *request)
       pntSelected[i] = (char *)varSelected[1].c_str();
     else
       pntSelected[i] = (char *)varSelected[0].c_str();
-  sprintf(Header_neu, html_header, varProject.getTimeString().c_str());
+  sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str());
   sprintf(Body_neu, html_NWconfig, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
               Un_Checked[(varConfig.NW_Flags & NW_StaticIP)/NW_StaticIP].c_str(), varConfig.NW_IPAddress, varConfig.NW_NetzName, varConfig.NW_SubMask, varConfig.NW_Gateway, varConfig.NW_DNS, 
               varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4], 
@@ -236,43 +236,62 @@ void WebserverPOST(AsyncWebServerRequest *request)
             if(CheckboxSet == 12)
             {
               varProject.startAutoMode();
-              WebserverRoot(request);
+              request->send_P(200, "text/html", "Automatic Betrieb aktiviert!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
             }
             else
             {
               varProject.stopAutoMode();
-              WebserverRoot(request);
+              request->send_P(200, "text/html", "Automatic Betrieb deaktiviert!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
             }
             break;
           case 12:
             CheckboxSet = 12;
             break;
           case 21:
+            if(varProject.getAutoStateFlag())
+              break;
             if(CheckboxSet == 22)
             {
               varProject.StartReference();
-              WebserverRoot(request);
+              request->send_P(200, "text/html", "Referenzfahrt gestartet!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
             }
             else
             {
-              varProject.AbortReference();
-              WebserverRoot(request);
+              if(varProject.getReferenceState())
+              {
+                varProject.AbortReference();
+                request->send_P(200, "text/html", "Referenzfahrt abgebrochen!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+              }
+              else
+              {
+                request->send_P(200, "text/html", "Referenzfahrt ist nicht gestartet!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+              }
             }
             break;
           case 22:
             CheckboxSet = 22;
             break;
           case 31:
+            if(varProject.getAutoStateFlag())
+              break;
             varProject.TurnSolar(solWest);
-            WebserverRoot(request);
+            request->send_P(200, "text/html", "Solar West!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
             break;
           case 41:
+            if(varProject.getAutoStateFlag())
+              break;
             varProject.TurnSolar(solOff);
-            WebserverRoot(request);
+            request->send_P(200, "text/html", "Solar off!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
             break;
           case 51:
+            if(varProject.getAutoStateFlag())
+              break;
             varProject.TurnSolar(solEast);
-            WebserverRoot(request);
+            request->send_P(200, "text/html", "Solar East!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
+            break;
+          case 61:
+            varProject.resetErrorFlag();
+            request->send_P(200, "text/html", "Fehler zurueckgesetzt!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
             break;
           
           default:
@@ -321,6 +340,7 @@ void WebserverPOST(AsyncWebServerRequest *request)
         varProject.setTime(ZeitenTemp[0], ZeitenTemp[1], ZeitenTemp[2]);
         varProject.setTimeAutoBreak(TempMinuten[3]);
         request->send_P(200, "text/html", "Neue Zeiteinstellung wurde uebernommen!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+        SaveProjectData();
       }
       else
       {
@@ -330,6 +350,37 @@ void WebserverPOST(AsyncWebServerRequest *request)
     }
     case subpo:
     {
+      uint32 TempPositions[2] = {0, 0};
+      if(parameter == 2)
+      {
+        for (int i = 0; i < parameter; i++)
+        {
+          uint8 Temp = 0;
+          if(sscanf(request->getParam(i)->name().c_str(), "pos%hhu", &Temp) == 1)
+          {
+            if((Temp == 1)||(Temp == 2))  
+              TempPositions[Temp-1]= request->getParam(Temp-1)->value().toInt();
+            else
+              request->send_P(200, "text/html", "Parametername unbekannt!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+          }
+        }
+      }
+      else
+      {
+        request->send_P(200, "text/html", "Parameteranzahl falsch!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+        return;
+      }
+      if((TempPositions[0] < TempPositions[1])&&(TempPositions[1]<=varProject.getMaxPosition()))
+      {
+        varProject.setStartPosition(TempPositions[0]);
+        varProject.setEndPosition(TempPositions[1]);
+        request->send_P(200, "text/html", "Neue Positionseinstellung wurde uebernommen!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+        SaveProjectData();
+      }
+      else
+      {
+        request->send_P(200, "text/html", "Fehler, neue Positionseinstellung nicht uebernommen!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
+      }
       break;
     }
     default:
