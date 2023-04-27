@@ -88,13 +88,13 @@ void WebserverPOST(AsyncWebServerRequest *request)
         {
           if(request->getParam(i)->value()!="xxxxxx")
           {
-            if ((request->getParam(i)->value().length() <= 60)&&(request->getParam(i)->value().length() >= 8))
+            if ((request->getParam(i)->value().length() <= 65)&&(request->getParam(i)->value().length() >= 8))
             { 
               strcpy(varConfig.WLAN_Password, request->getParam(i)->value().c_str());
             }
             else
             {
-              request->send_P(200, "text/html", "Passwortlaenge muss zwischen 8 und 60 Zeichen liegen<form> <input type=\"button\" value=\"Go back!\" onclick=\"history.back()\"></form>");
+              request->send_P(200, "text/html", "Passwortlaenge muss zwischen 8 und 65 Zeichen liegen<form> <input type=\"button\" value=\"Go back!\" onclick=\"history.back()\"></form>");
               return;
             }
           }
@@ -233,6 +233,11 @@ void WebserverPOST(AsyncWebServerRequest *request)
           switch (Temp)
           {
           case 11:
+            if(varProject.isError())
+            {
+              request->send_P(200, "text/html", "Fehler, Automatic Betrieb konnte nicht aktiviert werden!<br><meta http-equiv=\"refresh\" content=\"5; URL=\\\">");
+              break;
+            }
             if(CheckboxSet == 12)
             {
               varProject.startAutoMode();
@@ -250,6 +255,11 @@ void WebserverPOST(AsyncWebServerRequest *request)
           case 21:
             if(varProject.getAutoStateFlag())
               break;
+            if(varProject.isError())
+            {
+              request->send_P(200, "text/html", "Fehler, Referenzfahrt kann nicht gestartet werden!<br><meta http-equiv=\"refresh\" content=\"5; URL=\\\">");
+              break;
+            }
             if(CheckboxSet == 22)
             {
               varProject.StartReference();
@@ -274,6 +284,11 @@ void WebserverPOST(AsyncWebServerRequest *request)
           case 31:
             if(varProject.getAutoStateFlag())
               break;
+            if(varProject.isError())
+            {
+              request->send_P(200, "text/html", "Fehler, Motor kann nicht gestartet werden!<br><meta http-equiv=\"refresh\" content=\"5; URL=\\\">");
+              break;
+            }
             varProject.TurnSolar(solWest);
             request->send_P(200, "text/html", "Solar West!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
             break;
@@ -286,11 +301,17 @@ void WebserverPOST(AsyncWebServerRequest *request)
           case 51:
             if(varProject.getAutoStateFlag())
               break;
+            if(varProject.isError())
+            {
+              request->send_P(200, "text/html", "Fehler, Motor kann nicht gestartet werden!<br><meta http-equiv=\"refresh\" content=\"5; URL=\\\">");
+              break;
+            }
             varProject.TurnSolar(solEast);
             request->send_P(200, "text/html", "Solar East!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
             break;
           case 61:
             varProject.resetErrorFlag();
+            SaveProjectData();
             request->send_P(200, "text/html", "Fehler zurueckgesetzt!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
             break;
           

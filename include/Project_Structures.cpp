@@ -156,7 +156,7 @@ void ProjectClass::loop()
         ReferenceLoop();
         return;
     }
-    if(((LastPosChange + 10000) < millis()) && (OutputSolarState!=solOff))
+    if(((LastPosChange + 10000) < millis()) && (OutputSolarState!=solOff) && getAutoStateFlag())
     {
         TurnSolar(solOff);
         Settings->Flags |= flagError;

@@ -54,6 +54,7 @@ void setup(void)
     LoadProjectData();
     ResetVarSpeichern(0);
   }
+  //EinstSpeichern();
   //WLAN starten
   if (varConfig.NW_Flags&NW_WiFi_AP)
     WiFi_Start_AP(varConfig.WLAN_SSID, varConfig.WLAN_Password);
