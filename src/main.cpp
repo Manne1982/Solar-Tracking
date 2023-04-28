@@ -45,9 +45,6 @@ void setup(void)
     ArduinoOTA.handle();
     delay(1000);
   }
-
-
-  delay(1000);
   if (ResetCount < 5) //Wenn nicht 5 mal in den ersten 10 Sekunden der Startvorgang abgebrochen wurde
   {
     EinstLaden();
@@ -105,8 +102,7 @@ void loop()
   {
     Break_60s = millis() + 60000;
 
-    if(varProject.anyChange())
-      SaveProjectData();    
+    SaveProjectData();    
 
     //MQTT Verbindungskontrolle und neu verbinden
     if ((MQTTclient.state() != 0)&&(varConfig.NW_Flags&NW_MQTTActive))

@@ -13,6 +13,7 @@ AutoPositioningOn(0),
 anyPosChange(0),
 referenceState(0),
 LastPosChange(0),
+LastPosChangeMinutes(0),
 monthDay(0),
 currentMonth(0),
 currentYear(0),
@@ -81,7 +82,7 @@ void ProjectClass::checkSchedule()
         goToStart();
         return;
     }
-    if((currentMinutes >= EndMinutes)&&(Settings->CurrentPosition<Settings->EndPosition))
+    if((currentMinutes >= EndMinutes)&&(Settings->CurrentPosition < Settings->EndPosition))
     {
         goToEnd();
     }
@@ -91,8 +92,11 @@ void ProjectClass::checkSchedule()
     uint16 PositionSteps = (Settings->EndPosition - Settings->StartPosition)/quantityPosChanges;
     uint16 start = ((EndMinutes - StartMinutes)%Settings->BreakMinute)/2;
 
-    if(!((currentMinutes + start - StartMinutes)%Settings->BreakMinute))
+    if(!((currentMinutes + start - StartMinutes)%Settings->BreakMinute)&& (currentMinutes != LastPosChangeMinutes))
+    {
         goToPosition(PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute));
+        LastPosChangeMinutes = currentMinutes;
+    }
 }
 String ProjectClass::getTimeString()
 {
@@ -123,6 +127,7 @@ void ProjectClass::TurnSolar(uint8 _value)
     digitalWrite(OutputTurnDirection, 1);
     digitalWrite(OutputTurnOnOff, 0);
     OutputSolarLastChange = millis();
+    LastPosChange = millis();
     OutputSolarState = solWest;
     OutputSolarStateBefore = solWest;
     break;
@@ -137,6 +142,7 @@ void ProjectClass::TurnSolar(uint8 _value)
     digitalWrite(OutputTurnDirection, 0);
     digitalWrite(OutputTurnOnOff, 0);
     OutputSolarLastChange = millis();
+    LastPosChange = millis();
     OutputSolarState = solEast;
     OutputSolarStateBefore = solEast;
     break;
@@ -159,6 +165,7 @@ void ProjectClass::loop()
     if(((LastPosChange + 10000) < millis()) && (OutputSolarState!=solOff) && getAutoStateFlag())
     {
         TurnSolar(solOff);
+        stopAutoMode();
         Settings->Flags |= flagError;
     }
     if(!AutoPositioningOn)

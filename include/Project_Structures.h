@@ -120,6 +120,7 @@ class ProjectClass {
     uint8 anyPosChange;
     uint8 referenceState;
     unsigned long LastPosChange;
+    uint32 LastPosChangeMinutes;
     //Uhrzeit Variablen
     WiFiUDP *ntpUDP;
     NTPClient *timeClient;
