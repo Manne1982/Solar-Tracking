@@ -13,6 +13,7 @@ AutoPositioningOn(0),
 anyPosChange(0),
 referenceState(0),
 LastPosChange(0),
+TimeToStop(0),
 LastPosChangeMinutes(0),
 monthDay(0),
 currentMonth(0),
@@ -162,6 +163,9 @@ void ProjectClass::loop()
         ReferenceLoop();
         return;
     }
+    if((TimeToStop > 0) && (TimeToStop <= millis()))
+        TurnSolar(solOff);
+
     if(((LastPosChange + 10000) < millis()) && (OutputSolarState!=solOff) && getAutoStateFlag())
     {
         TurnSolar(solOff);
@@ -225,6 +229,19 @@ void ProjectClass::goToStart()
 void ProjectClass::goToEnd()
 {
     goToPosition(getEndPosition());
+}
+void ProjectClass::goToTime(uint8 Direction, uint16 Time_ms)
+{
+    if(getAutoStateFlag())
+        return;
+    if(isError())
+        return;
+    if(OutputSolarState != solOff)
+        return;
+    if(!((Direction == solEast)||(Direction == solWest)))
+        return;
+    TimeToStop = millis() + Time_ms;
+    TurnSolar(Direction);  
 }
 void ProjectClass::startAutoMode()
 {
@@ -403,12 +420,12 @@ uint32 ProjectClass::getMaxPosition()
 {
     return Settings->MaxPosition;
 }
-void ProjectClass::setCurrentPosition(uint32 _Value)
+/*void ProjectClass::setCurrentPosition(uint32 _Value)
 {
     if(Settings->MaxPosition < _Value)
         return;
     Settings->CurrentPosition = _Value;
-}
+}*/
 uint32 ProjectClass::getCurrentPosition()
 {
     return Settings->CurrentPosition;

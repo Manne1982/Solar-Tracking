@@ -45,12 +45,12 @@ void setup(void)
     ArduinoOTA.handle();
     delay(1000);
   }
-  if (ResetCount < 5) //Wenn nicht 5 mal in den ersten 10 Sekunden der Startvorgang abgebrochen wurde
-  {
+//  if (ResetCount < 5) //Wenn nicht 5 mal in den ersten 10 Sekunden der Startvorgang abgebrochen wurde
+//  {
     EinstLaden();
     LoadProjectData();
     ResetVarSpeichern(0);
-  }
+//  }
   //EinstSpeichern();
   //WLAN starten
   if (varConfig.NW_Flags&NW_WiFi_AP)
@@ -95,14 +95,16 @@ void loop()
   if (Break_10m < millis())
   {
     Break_10m = millis() + 600000;
+    if((varProject.getOutputSolarState() == solOff) && !varProject.anyChange())
+      SaveProjectData();    
     WIFIConnectionCheck(true);
   }
   //Anweisungen werden alle 20 Sekunden ausgefuehrt
   if (Break_60s < millis())
   {
     Break_60s = millis() + 60000;
-
-    SaveProjectData();    
+    if((varProject.getOutputSolarState() == solOff) && varProject.anyChange())
+      SaveProjectData();    
 
     //MQTT Verbindungskontrolle und neu verbinden
     if ((MQTTclient.state() != 0)&&(varConfig.NW_Flags&NW_MQTTActive))

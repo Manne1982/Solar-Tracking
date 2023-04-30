@@ -66,6 +66,7 @@ class ProjectClass {
     void goToPosition(uint32 _Value);
     void goToStart();
     void goToEnd();
+    void goToTime(uint8 Direction, uint16 Time_ms);
     void startAutoMode();
     void stopAutoMode();
     uint8 getAutoStateFlag();
@@ -90,7 +91,7 @@ class ProjectClass {
 
     void setMaxPosition(uint32 _Value);
     uint32 getMaxPosition();
-    void setCurrentPosition(uint32 _Value);
+   // void setCurrentPosition(uint32 _Value);
     uint32 getCurrentPosition();
     void setStartPosition(uint32 _Value);
     uint32 getStartPosition();
@@ -120,6 +121,7 @@ class ProjectClass {
     uint8 anyPosChange;
     uint8 referenceState;
     unsigned long LastPosChange;
+    unsigned long TimeToStop;
     uint32 LastPosChangeMinutes;
     //Uhrzeit Variablen
     WiFiUDP *ntpUDP;

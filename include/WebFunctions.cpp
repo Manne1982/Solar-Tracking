@@ -19,7 +19,7 @@ void WebserverRoot(AsyncWebServerRequest *request)
   sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str());
   sprintf(HTMLTemp, html_Start, Un_Checked[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getIsNotInit()].c_str(), 
   varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), 
-  varDisabled[varProject.getAutoStateFlag()].c_str(),
+  varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(),
   varProject.getStartPosition(), varProject.getMaxPosition(), varProject.getEndPosition(), 
   varProject.getMaxPosition(), varProject.getMaxPosition(), varProject.getCurrentPosition(), varProject.getCouterFailure(),
   varProject.getTimeStart().c_str(), varProject.getTimeEnd().c_str(), varProject.getTimeTurnBack().c_str(), varProject.getTimeAutoBreak());
@@ -292,6 +292,17 @@ void WebserverPOST(AsyncWebServerRequest *request)
             varProject.TurnSolar(solWest);
             request->send_P(200, "text/html", "Solar West!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
             break;
+          case 71:
+            if(varProject.getAutoStateFlag())
+              break;
+            if(varProject.isError())
+            {
+              request->send_P(200, "text/html", "Fehler, Motor kann nicht gestartet werden!<br><meta http-equiv=\"refresh\" content=\"5; URL=\\\">");
+              break;
+            }
+            varProject.goToTime(solWest, 1000);
+            request->send_P(200, "text/html", "Solar West!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
+            break;
           case 41:
             if(varProject.getAutoStateFlag())
               break;
@@ -307,6 +318,17 @@ void WebserverPOST(AsyncWebServerRequest *request)
               break;
             }
             varProject.TurnSolar(solEast);
+            request->send_P(200, "text/html", "Solar East!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
+            break;
+          case 81:
+            if(varProject.getAutoStateFlag())
+              break;
+            if(varProject.isError())
+            {
+              request->send_P(200, "text/html", "Fehler, Motor kann nicht gestartet werden!<br><meta http-equiv=\"refresh\" content=\"5; URL=\\\">");
+              break;
+            }
+            varProject.goToTime(solEast, 1000);
             request->send_P(200, "text/html", "Solar East!<br><meta http-equiv=\"refresh\" content=\"0; URL=\\\">");
             break;
           case 61:

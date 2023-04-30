@@ -100,6 +100,20 @@ const char html_Start[] PROGMEM = R"rawliteral(
 	  <input value="Manu Ost" %s type="submit">
 	  </form>
   </TR>
+  <TR>
+    <TD VALIGN="TOP">
+	  <form method="post" action="/POST">
+      <input name="cnt71" value="1" type="hidden">
+	  <input value="Manu West 1s" %s type="submit">
+	  </form>
+    <TD VALIGN="TOP">
+	  </TD>
+    <TD VALIGN="TOP">
+	  <form method="post" action="/POST">
+      <input name="cnt81" value="1" type="hidden">
+	  <input value="Manu Ost 1s" %s type="submit">
+	  </form>
+  </TR>
 </TABLE>
 <br />
 <TABLE border="1">
