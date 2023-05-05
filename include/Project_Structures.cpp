@@ -15,6 +15,7 @@ referenceState(0),
 LastPosChange(0),
 TimeToStop(0),
 LastPosChangeMinutes(0),
+LEDState(0),
 monthDay(0),
 currentMonth(0),
 currentYear(0),
@@ -48,7 +49,9 @@ void ProjectClass::InitIO()
   pinMode(OutputRelais4, OUTPUT);
   digitalWrite(OutputRelais4, 1);
 
-  pinMode(CounterPinPosition, INPUT_PULLUP); 
+  pinMode(CounterPinPosition, INPUT); 
+  pinMode(LEDPin, OUTPUT); 
+
 }
 void ProjectClass::InitTimeClient(String _Server, long int _Offset)
 {
@@ -78,14 +81,17 @@ void ProjectClass::checkSchedule()
     uint16 StartMinutes = getMinutes(Settings->TimeStart);
     uint16 currentMinutes = currentHour * 60 + currentMin;
     uint16 EndMinutes = getMinutes(Settings->TimeEnd);
-    if((currentMinutes>=getMinutes(Settings->TimeTurnBack))&&((currentMinutes < StartMinutes)||(currentMinutes > EndMinutes))&&(Settings->CurrentPosition > Settings->StartPosition)&&(OutputSolarState==solOff))
+    if((currentMinutes == getMinutes(Settings->TimeTurnBack))&&(Settings->CurrentPosition > Settings->StartPosition)&&(OutputSolarState==solOff)&& (currentMinutes != LastPosChangeMinutes))
     {
+        LastPosChangeMinutes = currentMinutes;
         goToStart();
         return;
     }
-    if((currentMinutes >= EndMinutes)&&(Settings->CurrentPosition < Settings->EndPosition))
+    if((currentMinutes == EndMinutes)&&(Settings->CurrentPosition < Settings->EndPosition)&&(OutputSolarState==solOff)&& (currentMinutes != LastPosChangeMinutes))
     {
+        LastPosChangeMinutes = currentMinutes;
         goToEnd();
+        return;
     }
     if((StartMinutes > currentMinutes)||(EndMinutes < currentMinutes))
         return;
@@ -98,6 +104,25 @@ void ProjectClass::checkSchedule()
         goToPosition(PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute));
         LastPosChangeMinutes = currentMinutes;
     }
+}
+void ProjectClass::goToAutoPosition()
+{
+    unsigned long long epochTime = timeClient->getEpochTime();
+    struct tm *ptm = gmtime((time_t *)&epochTime);
+    currentHour = ptm->tm_hour;
+    currentMin = ptm->tm_min;
+    if(!(Settings->Flags&flagAutoModeOn)||!(Settings->Flags&flagInitialised))
+        return;
+    uint16 StartMinutes = getMinutes(Settings->TimeStart);
+    uint16 currentMinutes = currentHour * 60 + currentMin;
+    uint16 EndMinutes = getMinutes(Settings->TimeEnd);
+    uint16 quantityPosChanges = (EndMinutes - StartMinutes)/Settings->BreakMinute;
+    uint16 PositionSteps = (Settings->EndPosition - Settings->StartPosition)/quantityPosChanges;
+    uint16 start = ((EndMinutes - StartMinutes)%Settings->BreakMinute)/2;
+
+    goToPosition(PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute));
+    LastPosChangeMinutes = currentMinutes;
+
 }
 String ProjectClass::getTimeString()
 {
@@ -123,6 +148,7 @@ void ProjectClass::TurnSolar(uint8 _value)
     if(OutputSolarState == solEast)
     {
       TurnSolar(solOff);
+      OutputSolarLastChange = millis();
       break;
     }
     digitalWrite(OutputTurnDirection, 1);
@@ -138,6 +164,7 @@ void ProjectClass::TurnSolar(uint8 _value)
     if(OutputSolarState == solWest)
     {
       TurnSolar(solOff);
+      OutputSolarLastChange = millis();
       break;
     }
     digitalWrite(OutputTurnDirection, 0);
@@ -152,10 +179,27 @@ void ProjectClass::TurnSolar(uint8 _value)
     break;
   }
 }
-void ProjectClass::loop()
+void ProjectClass::loop(const unsigned long * intCounter, unsigned long * intCounterOld)
 {
-    if(anyChange())
+    if(*intCounter != *intCounterOld)
     {
+        uint16 Temp = *intCounter -  *intCounterOld;
+        *intCounterOld = *intCounter;   
+        switch(getOutputSolarState())
+        {
+            case solWest:
+            case solWestRunAfter:
+                addToCounter(Temp);
+                break;
+            case solEast:
+            case solEastRunAfter:
+                subToCounter(Temp);
+                break;
+            default:
+                addToCounterFailure(Temp);
+                break;
+        }
+        ChangeLED();
         LastPosChange = millis();
     }
     if(referenceState)
@@ -164,8 +208,10 @@ void ProjectClass::loop()
         return;
     }
     if((TimeToStop > 0) && (TimeToStop <= millis()))
+    {
         TurnSolar(solOff);
-
+        TimeToStop = 0;
+    }
     if(((LastPosChange + 10000) < millis()) && (OutputSolarState!=solOff) && getAutoStateFlag())
     {
         TurnSolar(solOff);
@@ -177,7 +223,7 @@ void ProjectClass::loop()
     switch (OutputSolarState)
     {
     case solWest:
-        if((getCurrentPosition() >= targetPosition)||(getCurrentPosition() == Settings->MaxPosition))
+        if((getCurrentPosition() >= targetPosition)||(getCurrentPosition() >= Settings->MaxPosition))
         {
             TurnSolar(solOff);
             targetPosition = 0;
@@ -206,7 +252,7 @@ void ProjectClass::goToPosition(uint32 _value)
         return;
     if(OutputSolarState != solOff)
         return;
-    
+   
     if(_value > getCurrentPosition())
     {
         targetPosition = _value;
@@ -384,6 +430,11 @@ void ProjectClass::incrementCounter()
     Settings->CurrentPosition++;
     anyPosChange=1;
 }
+void ProjectClass::addToCounter(uint16 _value)
+{
+    Settings->CurrentPosition += _value;
+    anyPosChange = 1;
+}
 void ProjectClass::decrementCounter()
 {
     if(Settings->CurrentPosition)
@@ -392,9 +443,19 @@ void ProjectClass::decrementCounter()
         anyPosChange=1;
     }
 }
+void ProjectClass::subToCounter(uint16 _value)
+{
+    Settings->CurrentPosition -= _value;
+    anyPosChange = 1;
+}
 void ProjectClass::incrementCounterFailure()
 {
     counterFailure++;
+    Settings->Flags &= ~((uint16) flagInitialised | (uint16) flagAutoModeOn);
+}
+void ProjectClass::addToCounterFailure(uint16 _value)
+{
+    counterFailure += _value;
     Settings->Flags &= ~((uint16) flagInitialised | (uint16) flagAutoModeOn);
 }
 uint16 ProjectClass::resetCounterFailure()
@@ -525,6 +586,7 @@ void ProjectClass::ReferenceLoop()
             Settings->StartPosition = 1;
             Settings->Flags |= ((uint16) flagInitialised);
             referenceState = 0;
+            resetCounterFailure();
         }
         break;
     
@@ -553,4 +615,9 @@ bool ProjectClass::checkTime(uint8 * _Time)
         return 0;
     
     return 1;
+}
+void ProjectClass::ChangeLED()
+{
+    LEDState = (LEDState + 1)%2;
+    digitalWrite(LEDPin, LEDState);
 }

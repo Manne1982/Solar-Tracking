@@ -16,7 +16,7 @@ void WebserverRoot(AsyncWebServerRequest *request)
   char *HTMLTemp = new char[(strlen(html_Start) + 200)];
   char *HTMLString = new char[(strlen(html_header) + 50)+(strlen(html_Start) + 100)];
   HTMLTemp[0] = 0;
-  sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str());
+  sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str(), InterruptCounter, PollingCounter);
   sprintf(HTMLTemp, html_Start, Un_Checked[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getIsNotInit()].c_str(), 
   varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), 
   varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(), varDisabled[varProject.getAutoStateFlag()].c_str(),
@@ -43,7 +43,7 @@ void WebserverSettings(AsyncWebServerRequest *request)
       pntSelected[i] = (char *)varSelected[1].c_str();
     else
       pntSelected[i] = (char *)varSelected[0].c_str();
-  sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str());
+  sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str(), InterruptCounter, PollingCounter);
   sprintf(Body_neu, html_NWconfig, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
               Un_Checked[(varConfig.NW_Flags & NW_StaticIP)/NW_StaticIP].c_str(), varConfig.NW_IPAddress, varConfig.NW_NetzName, varConfig.NW_SubMask, varConfig.NW_Gateway, varConfig.NW_DNS, 
               varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4], 
@@ -241,6 +241,7 @@ void WebserverPOST(AsyncWebServerRequest *request)
             if(CheckboxSet == 12)
             {
               varProject.startAutoMode();
+              varProject.goToAutoPosition();
               request->send_P(200, "text/html", "Automatic Betrieb aktiviert!<br><meta http-equiv=\"refresh\" content=\"2; URL=\\\">");
             }
             else

@@ -14,10 +14,6 @@ void EinstSpeichern()
   for (unsigned long long i = 0; i < sizeof(varConfig); i++)
     Checksumme += pointer[i];
 
-  Serial.print("Gespeicherte Checksumme: ");
-  Serial.println(Checksumme);
-
-
   //EEPROM initialisieren
   EEPROM.begin(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1);
 
@@ -52,12 +48,6 @@ void EinstLaden()
   }
   else
   {
-    Serial.print("Checksumme: ");
-    Serial.print(Checksumme);
-    Serial.print("ChecksummeEEPROM: ");
-    Serial.println(ChecksummeEEPROM);
-    
-    Serial.println("Fehler beim Dateneinlesen (Allgemeine Einstellung)");
     EEPROM.end(); // Free RAM copy of structure
     EinstSpeichern();
   }
@@ -72,8 +62,6 @@ void SaveProjectData()
   for (unsigned long long i = 0; i < sizeof(*varProject.getSettings()); i++)
     Checksumme += pointer[i];
 
-  Serial.print("Gespeicherte Checksumme (Projektdaten): ");
-  Serial.println(Checksumme);
 
   //EEPROM initialisieren
   EEPROM.begin(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1);
@@ -109,12 +97,6 @@ void LoadProjectData()
   }
   else
   {
-    Serial.print("Checksumme: ");
-    Serial.print(Checksumme);
-    Serial.print("ChecksummeEEPROM: ");
-    Serial.println(ChecksummeEEPROM);
-    
-    Serial.println("Fehler beim Dateneinlesen (Projektdaten)");
     EEPROM.end(); // Free RAM copy of structure
     SaveProjectData();
   }
@@ -145,20 +127,7 @@ char ResetVarLesen()
 
 void IRAM_ATTR handleInterrupt()
 {
-  switch(varProject.getOutputSolarState())
-  {
-    case solWest:
-    case solWestRunAfter:
-      varProject.incrementCounter();
-      break;
-    case solEast:
-    case solEastRunAfter:
-      varProject.decrementCounter();
-      break;
-    default:
-      varProject.incrementCounterFailure();
-      break;
-  }
+  InterruptCounter++;
 }
 
 String IntToStr(int _var)

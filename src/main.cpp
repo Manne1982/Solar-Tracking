@@ -23,7 +23,6 @@
 void setup(void)
 {
   uint8 ResetCount;
-  Serial.begin(9600);
   varProject.InitIO();
   attachInterrupt(digitalPinToInterrupt(CounterPinPosition), handleInterrupt, FALLING);
  
@@ -85,67 +84,70 @@ void loop()
   
   //OTA
   ArduinoOTA.handle();
-  //Anweisungen werden alle 3600 Sekunden (1h) ausgefuehrt
-  if (Break_h < millis())
+  if(varProject.getOutputSolarState()==solOff)
   {
-    Break_h = millis() + 3600000;
-    varProject.timeClientUpdate();
-  }
-    //Anweisungen werden alle 10 Minuten ausgefuehrt
-  if (Break_10m < millis())
-  {
-    Break_10m = millis() + 600000;
-    if((varProject.getOutputSolarState() == solOff) && !varProject.anyChange())
-      SaveProjectData();    
-    WIFIConnectionCheck(true);
-  }
-  //Anweisungen werden alle 20 Sekunden ausgefuehrt
-  if (Break_60s < millis())
-  {
-    Break_60s = millis() + 60000;
-    if((varProject.getOutputSolarState() == solOff) && varProject.anyChange())
-      SaveProjectData();    
-
-    //MQTT Verbindungskontrolle und neu verbinden
-    if ((MQTTclient.state() != 0)&&(varConfig.NW_Flags&NW_MQTTActive))
+    //Anweisungen werden alle 3600 Sekunden (1h) ausgefuehrt
+    if (Break_h < millis())
     {
-      if(WIFIConnectionCheck(false))
+      Break_h = millis() + 3600000;
+      varProject.timeClientUpdate();
+    }
+      //Anweisungen werden alle 10 Minuten ausgefuehrt
+    if (Break_10m < millis())
+    {
+      Break_10m = millis() + 600000;
+      if((varProject.getOutputSolarState() == solOff) && !varProject.anyChange())
+        SaveProjectData();    
+      WIFIConnectionCheck(true);
+    }
+    //Anweisungen werden alle 20 Sekunden ausgefuehrt
+    if (Break_60s < millis())
+    {
+      Break_60s = millis() + 60000;
+      if((varProject.getOutputSolarState() == solOff) && varProject.anyChange())
+        SaveProjectData();    
+
+      //MQTT Verbindungskontrolle und neu verbinden
+      if ((MQTTclient.state() != 0)&&(varConfig.NW_Flags&NW_MQTTActive))
       {
+        if(WIFIConnectionCheck(false))
+        {
+          WifiState[0] = 'W';
+          MQTTclient.disconnect();
+          MQTTinit();
+        }
+        else
+          WifiState[0] = 0;
+      }
+      else
+      {
+        sprintf(MQTTState, "MQTT Ready");
         WifiState[0] = 'W';
+      }
+    }
+
+    //Anweisungen werden alle 1 Sekunden ausgefuehrt
+    if (Break_10s < millis())
+    {
+      Break_10s = millis() + 10000;
+      //Vorbereitung Datum
+      varProject.checkSchedule();
+    }
+
+    //Anweisungen werden alle 200 Millisekunden ausgefuehrt
+    /*if (Break_200ms < millis())
+    {
+      Break_200ms = millis() + 200;
+    }*/
+
+    //MQTT wichtige Funktion
+    if((WiFi.status()== WL_CONNECTED)&&(varConfig.NW_Flags&NW_MQTTActive))  //MQTTclient.loop() wichtig damit die Daten im Hintergrund empfangen werden
+    {
+      if(!MQTTclient.loop())
+      {
         MQTTclient.disconnect();
         MQTTinit();
       }
-      else
-        WifiState[0] = 0;
-    }
-    else
-    {
-      sprintf(MQTTState, "MQTT Ready");
-      WifiState[0] = 'W';
-    }
-  }
-
-  //Anweisungen werden alle 1 Sekunden ausgefuehrt
-  if (Break_10s < millis())
-  {
-    Break_10s = millis() + 10000;
-    //Vorbereitung Datum
-    varProject.checkSchedule();
-  }
-
-  //Anweisungen werden alle 200 Millisekunden ausgefuehrt
-  if (Break_200ms < millis())
-  {
-    Break_200ms = millis() + 200;
-  }
-
-  //MQTT wichtige Funktion
-  if((WiFi.status()== WL_CONNECTED)&&(varConfig.NW_Flags&NW_MQTTActive))  //MQTTclient.loop() wichtig damit die Daten im Hintergrund empfangen werden
-  {
-    if(!MQTTclient.loop())
-    {
-      MQTTclient.disconnect();
-      MQTTinit();
     }
   }
   //Restart for WWW-Requests
@@ -154,8 +156,17 @@ void loop()
     delay(1000);
     ESP.restart();
   }
-
-  varProject.loop();
+  if(digitalRead(CounterPinPosition))
+  {
+   // PollingCounter += (PollingLastState + 1)%2;
+    PollingLastState = 1;
+  }
+  else
+  {
+    PollingCounter += (PollingLastState * 1);
+    PollingLastState = 0;
+  }
+  varProject.loop(&PollingCounter, &InterruptCounterOld);
 }
 
 

@@ -9,6 +9,7 @@
 #define OutputRelais3 D4
 #define OutputRelais4 D3
 #define CounterPinPosition D7
+#define LEDPin 1
 
 
 
@@ -60,9 +61,10 @@ class ProjectClass {
     void InitTimeClient(String _Server, long int _Offset);
     void timeClientUpdate();
     void checkSchedule();
+    void goToAutoPosition();
     String getTimeString();
     void TurnSolar(uint8 _value = solOff); 
-    void loop(); //Funktion have to included into main loop
+    void loop(const unsigned long * intCounter, unsigned long * intCounterOld); //Funktion have to included into main loop
     void goToPosition(uint32 _Value);
     void goToStart();
     void goToEnd();
@@ -84,11 +86,14 @@ class ProjectClass {
     String getTimeTurnBack();
     uint16 getMinutes(String _Time);
     void incrementCounter();
+    void addToCounter(uint16 _value);
     void decrementCounter();
+    void subToCounter(uint16 _value);
     void incrementCounterFailure();
+    void addToCounterFailure(uint16 _value);
     uint16 resetCounterFailure(); //Return last Failure count befor reset
     uint16 getCouterFailure();
-
+  
     void setMaxPosition(uint32 _Value);
     uint32 getMaxPosition();
    // void setCurrentPosition(uint32 _Value);
@@ -104,7 +109,7 @@ class ProjectClass {
     uint8 getReferenceState();
     void resetErrorFlag();
     uint8 isError(); //is Error-Flag set
-
+    void ChangeLED();
 
   private:
     uint16 getMinutes(uint8 * _Time);
@@ -122,7 +127,10 @@ class ProjectClass {
     uint8 referenceState;
     unsigned long LastPosChange;
     unsigned long TimeToStop;
+    unsigned long CounterPolling;
+    uint8 HALLastState;
     uint32 LastPosChangeMinutes;
+    uint8 LEDState;
     //Uhrzeit Variablen
     WiFiUDP *ntpUDP;
     NTPClient *timeClient;

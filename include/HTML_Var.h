@@ -52,7 +52,7 @@ input[disabled] {
 
 </head>
 <body bgcolor=\"#BBFFFF\">
-%s | Status: %s
+%s | Status: %s | Interrupts: %lu | Polling: %lu
 <br />
 <hr><h3>
 <a href=\>Startseite</a> | 
