@@ -101,7 +101,7 @@ void ProjectClass::checkSchedule()
 
     if(!((currentMinutes + start - StartMinutes)%Settings->BreakMinute)&& (currentMinutes != LastPosChangeMinutes))
     {
-        goToPosition(PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute));
+        goToPosition(Settings->StartPosition + (PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute)));
         LastPosChangeMinutes = currentMinutes;
     }
 }
@@ -116,6 +116,9 @@ void ProjectClass::goToAutoPosition()
     uint16 StartMinutes = getMinutes(Settings->TimeStart);
     uint16 currentMinutes = currentHour * 60 + currentMin;
     uint16 EndMinutes = getMinutes(Settings->TimeEnd);
+
+    if((currentMinutes <= StartMinutes)||(currentMinutes >= EndMinutes))
+        return;
     uint16 quantityPosChanges = (EndMinutes - StartMinutes)/Settings->BreakMinute;
     uint16 PositionSteps = (Settings->EndPosition - Settings->StartPosition)/quantityPosChanges;
     uint16 start = ((EndMinutes - StartMinutes)%Settings->BreakMinute)/2;
@@ -217,6 +220,8 @@ void ProjectClass::loop(const unsigned long * intCounter, unsigned long * intCou
         TurnSolar(solOff);
         stopAutoMode();
         Settings->Flags |= flagError;
+        if(FailureTime[0]==0)
+            strcpy(FailureTime, getTimeString().c_str());
     }
     if(!AutoPositioningOn)
         return;
@@ -538,6 +543,7 @@ uint8 ProjectClass::getReferenceState()
 }
 void ProjectClass::resetErrorFlag()
 {
+    FailureTime[0] = 0;
     Settings->Flags &=  ~((uint16) flagError);
 }
 uint8 ProjectClass::isError()
@@ -620,4 +626,9 @@ void ProjectClass::ChangeLED()
 {
     LEDState = (LEDState + 1)%2;
     digitalWrite(LEDPin, LEDState);
+}
+
+const char * ProjectClass::getFailurTimeStr()
+{
+    return FailureTime;
 }

@@ -163,8 +163,12 @@ void loop()
   }
   else
   {
-    PollingCounter += (PollingLastState * 1);
-    PollingLastState = 0;
+    if(CountBreakPol < millis())
+    {
+      PollingCounter += (PollingLastState * 1);
+      PollingLastState = 0;
+      CountBreakPol = millis() + 70;
+    }
   }
   varProject.loop(&PollingCounter, &InterruptCounterOld);
 }

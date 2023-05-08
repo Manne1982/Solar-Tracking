@@ -110,6 +110,7 @@ class ProjectClass {
     void resetErrorFlag();
     uint8 isError(); //is Error-Flag set
     void ChangeLED();
+    const char * getFailurTimeStr();
 
   private:
     uint16 getMinutes(uint8 * _Time);
@@ -139,7 +140,7 @@ class ProjectClass {
     int currentYear;
     int currentHour;
     int currentMin;
-
+    char FailureTime[50];
 };
 
 #include "Project_Structures.cpp"
