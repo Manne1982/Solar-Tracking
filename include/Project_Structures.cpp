@@ -210,6 +210,12 @@ void ProjectClass::loop(const unsigned long * intCounter, unsigned long * intCou
         ReferenceLoop();
         return;
     }
+    else
+    if(referenceStateLight)
+    {
+        ReferenceLoopLight();
+        return;
+    }
     if((TimeToStop > 0) && (TimeToStop <= millis()))
     {
         TurnSolar(solOff);
@@ -275,7 +281,7 @@ void ProjectClass::goToPosition(uint32 _value)
 }
 void ProjectClass::goToStart()
 {
-    goToPosition(getStartPosition());
+    referenceStateLight = 1;
 }
 void ProjectClass::goToEnd()
 {
@@ -597,6 +603,38 @@ void ProjectClass::ReferenceLoop()
         break;
     
     default:
+        break;
+    }
+}
+void ProjectClass::ReferenceLoopLight()
+{
+    switch (referenceStateLight)
+    {
+    case 1:
+        if((LastPosChange + OutputSolarChangeLock) < millis())
+        {
+            TurnSolar(solEast);
+            LastPosChange = millis();
+            referenceStateLight++;
+        }
+        break;
+    case 2:
+        if((LastPosChange + 10000) < millis())
+        {
+            TurnSolar(solOff);
+            Settings->CurrentPosition = 0;
+            referenceStateLight++;
+        }
+        break;
+    case 3:
+        if((LastPosChange + OutputSolarChangeLock) < millis())
+        {
+            goToPosition(getStartPosition());
+            referenceStateLight = 0;
+        }
+        break;
+    default:
+        referenceStateLight = 0;
         break;
     }
 }

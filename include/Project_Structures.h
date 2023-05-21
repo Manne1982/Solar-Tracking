@@ -116,6 +116,7 @@ class ProjectClass {
     uint16 getMinutes(uint8 * _Time);
     bool checkTime(uint8 * _Time); //Return true if it is OK
     void ReferenceLoop();
+    void ReferenceLoopLight();
     ProjectConfig * Settings;
     uint16 counterFailure;
     unsigned long OutputSolarLastChange;
@@ -126,6 +127,7 @@ class ProjectClass {
     uint8 AutoPositioningOn;      //Automode ON
     uint8 anyPosChange;
     uint8 referenceState;
+    uint8 referenceStateLight;
     unsigned long LastPosChange;
     unsigned long TimeToStop;
     unsigned long CounterPolling;
