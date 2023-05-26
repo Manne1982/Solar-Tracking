@@ -627,7 +627,7 @@ void ProjectClass::ReferenceLoopLight()
         }
         break;
     case 3:
-        if((LastPosChange + OutputSolarChangeLock) < millis())
+        if((OutputSolarLastChange + OutputSolarChangeLock) < millis())
         {
             goToPosition(getStartPosition());
             referenceStateLight = 0;
