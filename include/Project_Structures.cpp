@@ -467,7 +467,8 @@ void ProjectClass::incrementCounterFailure()
 void ProjectClass::addToCounterFailure(uint16 _value)
 {
     counterFailure += _value;
-    Settings->Flags &= ~((uint16) flagInitialised | (uint16) flagAutoModeOn);
+    if((counterFailure >= Settings->StartPosition)||(counterFailure >= (Settings->MaxPosition - Settings->EndPosition)))
+        Settings->Flags &= ~((uint16) flagInitialised | (uint16) flagAutoModeOn);
 }
 uint16 ProjectClass::resetCounterFailure()
 {
@@ -630,6 +631,7 @@ void ProjectClass::ReferenceLoopLight()
         if((OutputSolarLastChange + OutputSolarChangeLock) < millis())
         {
             goToPosition(getStartPosition());
+            resetCounterFailure();
             referenceStateLight = 0;
         }
         break;
