@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include "ESPAsyncWebServer.h"
 #include "Project_Structures.h"
+#include <PubSubClient.h>
+
 
 #define BGTDEBUG 1
 

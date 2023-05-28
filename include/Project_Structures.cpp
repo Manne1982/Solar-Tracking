@@ -1,5 +1,10 @@
 #include "Project_Structures.h"
 #include "GlobalVariabels.h"
+#include "HTML_Var.h"
+//fuer Uhrzeitabruf notwendig
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+
 
 
 ProjectClass::ProjectClass():
@@ -263,7 +268,9 @@ void ProjectClass::goToPosition(uint32 _value)
         return;
     if(OutputSolarState != solOff)
         return;
-   
+    if(abs((int) Settings->CurrentPosition - (int) _value) < 5)
+        return;
+
     if(_value > getCurrentPosition())
     {
         targetPosition = _value;

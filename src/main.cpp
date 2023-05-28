@@ -5,11 +5,6 @@
 #include <WiFiClient.h>
 #include "ESPAsyncWebServer.h"
 #include <EEPROM.h>
-//MQTT
-#include <PubSubClient.h>
-//fuer Uhrzeitabruf notwendig
-#include <NTPClient.h>
-#include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 //Projektspezifisch
 #include "HTML_Var.h"
