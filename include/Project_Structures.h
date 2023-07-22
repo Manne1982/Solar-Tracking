@@ -111,6 +111,8 @@ class ProjectClass {
     uint8 isError(); //is Error-Flag set
     void ChangeLED();
     const char * getFailurTimeStr();
+    void SaveMessage(const char * newMes);
+    char * GetLastMessagesHTML();
 
   private:
     uint16 getMinutes(uint8 * _Time);
@@ -143,6 +145,10 @@ class ProjectClass {
     int currentHour;
     int currentMin;
     char FailureTime[50];
+    const uint8_t  maxMessages;
+    char * *sentMessages;
+    uint8_t lastMessage = maxMessages-1;
+    uint16_t countMessages = 0;
 };
 
 #include "Project_Structures.cpp"

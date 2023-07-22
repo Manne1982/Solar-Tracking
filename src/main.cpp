@@ -70,6 +70,7 @@ void setup(void)
   server.on("/", HTTP_GET, WebserverRoot);
   server.on("/Settings", HTTP_GET, WebserverSettings);
   server.on("/POST", HTTP_POST, WebserverPOST);
+  server.on("/Log", HTTP_POST, WebserverViewLog);
 
   //MQTT_sendText(MQTT_MSG_Logging, "Water control rebooted!");
 }
@@ -99,6 +100,7 @@ void loop()
     if (Break_60s < millis())
     {
       Break_60s = millis() + 60000;
+
       if((varProject.getOutputSolarState() == solOff) && varProject.anyChange())
         SaveProjectData();    
 

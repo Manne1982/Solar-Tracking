@@ -435,3 +435,9 @@ void WebserverPOST(AsyncWebServerRequest *request)
     }
   }
 }
+void WebserverViewLog(AsyncWebServerRequest *request)
+{
+  char * strLastMessages = varProject.GetLastMessagesHTML();
+  request->send_P(200, "text/html", strLastMessages);
+  delete[] strLastMessages;
+}

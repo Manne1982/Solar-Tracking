@@ -25,7 +25,9 @@ monthDay(0),
 currentMonth(0),
 currentYear(0),
 currentHour(0),
-currentMin(0)
+currentMin(0),
+maxMessages(40),
+countMessages(0)
 {
     Settings = new ProjectConfig;
     Settings->TimeEnd[tmHour] = 22;
@@ -36,6 +38,10 @@ currentMin(0)
     Settings->TimeTurnBack[tmHour] = 0;
     ntpUDP = new WiFiUDP;
     timeClient = 0;
+    sentMessages = new char*[maxMessages];
+    for(int i = 0; i < maxMessages; i++)
+        sentMessages[i]= 0;
+    lastMessage = maxMessages-1;
 }
 
 ProjectClass::~ProjectClass()
@@ -128,7 +134,7 @@ void ProjectClass::goToAutoPosition()
     uint16 PositionSteps = (Settings->EndPosition - Settings->StartPosition)/quantityPosChanges;
     uint16 start = ((EndMinutes - StartMinutes)%Settings->BreakMinute)/2;
 
-    goToPosition(PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute));
+    goToPosition(Settings->StartPosition + PositionSteps *((currentMinutes + start - StartMinutes)/Settings->BreakMinute));
     LastPosChangeMinutes = currentMinutes;
 
 }
@@ -228,6 +234,7 @@ void ProjectClass::loop(const unsigned long * intCounter, unsigned long * intCou
     }
     if(((LastPosChange + 10000) < millis()) && (OutputSolarState!=solOff) && getAutoStateFlag())
     {
+        SaveMessage("Zeit abgelaufen Fehler");
         TurnSolar(solOff);
         stopAutoMode();
         Settings->Flags |= flagError;
@@ -270,7 +277,11 @@ void ProjectClass::goToPosition(uint32 _value)
         return;
     if(abs((int) Settings->CurrentPosition - (int) _value) < 5)
         return;
-
+    String Temp = "Aktuelle Pos: ";
+    Temp += getCurrentPosition();
+    Temp += " | Zielposition: ";
+    Temp += _value;
+    SaveMessage(Temp.c_str());
     if(_value > getCurrentPosition())
     {
         targetPosition = _value;
@@ -573,6 +584,7 @@ void ProjectClass::ReferenceLoop()
         TurnSolar(solWest);
         LastPosChange = millis();
         referenceState++;
+        SaveMessage("Reference 1");
         break;
     case 2:
         if((LastPosChange + 10000) < millis())
@@ -581,6 +593,7 @@ void ProjectClass::ReferenceLoop()
             TurnSolar(solOff);
             LastPosChange = millis();
             referenceState++;
+            SaveMessage("Reference 2");
         }
         break;
     case 3:
@@ -589,6 +602,7 @@ void ProjectClass::ReferenceLoop()
             TurnSolar(solEast);
             LastPosChange = millis();
             referenceState++;
+            SaveMessage("Reference 3");
         }
         break;
     case 4:
@@ -607,10 +621,12 @@ void ProjectClass::ReferenceLoop()
             Settings->Flags |= ((uint16) flagInitialised);
             referenceState = 0;
             resetCounterFailure();
+            SaveMessage("Reference 4");
         }
         break;
     
     default:
+            SaveMessage("Reference default");
         break;
     }
 }
@@ -624,6 +640,7 @@ void ProjectClass::ReferenceLoopLight()
             TurnSolar(solEast);
             LastPosChange = millis();
             referenceStateLight++;
+            SaveMessage("ReferenceLight 1");
         }
         break;
     case 2:
@@ -632,6 +649,7 @@ void ProjectClass::ReferenceLoopLight()
             TurnSolar(solOff);
             Settings->CurrentPosition = 0;
             referenceStateLight++;
+            SaveMessage("ReferenceLight 2");
         }
         break;
     case 3:
@@ -640,10 +658,12 @@ void ProjectClass::ReferenceLoopLight()
             goToPosition(getStartPosition());
             resetCounterFailure();
             referenceStateLight = 0;
+            SaveMessage("ReferenceLight 3");
         }
         break;
     default:
         referenceStateLight = 0;
+        SaveMessage("ReferenceLight default");
         break;
     }
 }
@@ -678,4 +698,52 @@ void ProjectClass::ChangeLED()
 const char * ProjectClass::getFailurTimeStr()
 {
     return FailureTime;
+}
+void ProjectClass::SaveMessage(const char * newMes)
+{
+  uint8_t nextPos = 0;
+  if(lastMessage < (maxMessages-1))
+    nextPos = lastMessage + 1;
+  
+ 
+  if(sentMessages[nextPos]!=0)
+    delete[] sentMessages[nextPos];
+
+  sentMessages[nextPos] = new char[strlen(newMes)+30];
+  sprintf(sentMessages[nextPos], "%d.%d.%d %d:%d -> \"%s\"", monthDay, currentMonth, currentYear, currentHour, currentMin, newMes);
+  
+  lastMessage = nextPos;
+  countMessages++;
+}
+char * ProjectClass::GetLastMessagesHTML()
+{
+  int signCount = 200;
+  char * TextSum = 0;
+  String Text;
+//  for (int i = 0; i < maxMessages; i++)
+//  {
+//    if(sentMessages[i])
+//      signCount += (strlen(sentMessages[i])+12);
+//  }
+  TextSum = new char[signCount];
+  sprintf(TextSum, "LogNachrichten: <br>\n");
+  uint8_t ReadPos = lastMessage;
+  Text = TextSum;
+  for (int i = 0; i< maxMessages; i++)
+  {
+    if(ReadPos < (maxMessages-1))
+      ReadPos++;
+    else
+      ReadPos = 0;
+    
+    if(!sentMessages[ReadPos])
+      continue;
+
+    sprintf(TextSum, "%d -> %s <br>\n", i, sentMessages[ReadPos]);
+    Text += TextSum;
+  }
+  delete TextSum;
+  TextSum = new char[Text.length()+5];
+  sprintf(TextSum, "%s", Text.c_str());
+  return TextSum;
 }
