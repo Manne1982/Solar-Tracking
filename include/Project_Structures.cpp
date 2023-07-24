@@ -26,7 +26,7 @@ currentMonth(0),
 currentYear(0),
 currentHour(0),
 currentMin(0),
-maxMessages(40),
+maxMessages(50),
 countMessages(0)
 {
     Settings = new ProjectConfig;
