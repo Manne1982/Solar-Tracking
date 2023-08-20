@@ -53,6 +53,15 @@ struct ProjectConfig {
   uint8 TimeTurnBack[2];  
   uint16 BreakMinute;
 };
+struct MailConfig{
+  uint16 Flags = 0; 
+  char SMTP_Server[50] = "";
+  uint16_t Mail_Port = 587;
+  char Mail_Username[20] = "Benutzer@gmail.com";
+  char Mail_Password[70] = "123456";
+  char Mail_UserDomain[100] = "/SolarTracker";
+
+};
 class ProjectClass {
   public:
     ProjectClass();

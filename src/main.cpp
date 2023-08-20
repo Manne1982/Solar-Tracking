@@ -69,6 +69,7 @@ void setup(void)
   server.begin();
   server.on("/", HTTP_GET, WebserverRoot);
   server.on("/Settings", HTTP_GET, WebserverSettings);
+  server.on("/Mail", HTTP_GET, WebserverMail);
   server.on("/POST", HTTP_POST, WebserverPOST);
   server.on("/Log", HTTP_GET, WebserverViewLog);
 

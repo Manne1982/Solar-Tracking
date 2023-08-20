@@ -56,7 +56,8 @@ input[disabled] {
 <br />
 <hr><h3>
 <a href=\>Startseite</a> | 
-<a href=\Settings\>Einstellungen</a>  
+<a href=\Settings\>Einstellungen</a> |  
+<a href=\Mail\>E-Mail</a> 
 
 </h3><hr>
 )rawliteral";
@@ -369,6 +370,93 @@ const char html_NWconfig[] PROGMEM = R"rawliteral(
       Zertifikat: </td>
     <TD>
     <input name="mqFPrint" type="password" minlength="8" maxlength="60" size="35" value="xxxxxx"><br><br></td>
+    <TD valign="TOP">
+  </TR>
+
+</tbody></table>
+    <br>
+  <input value="Submit" type="submit">
+  </form>
+
+</body>
+</html>
+)rawliteral";
+
+const char html_Mailconfig[] PROGMEM = R"rawliteral(
+<h1>Solar Tracker Mail Einstellungen</h1><hr>
+<HR>
+<h2>Einstellung Sendeadresse</h2><BR>
+<form method="post" action="/POST">
+<TABLE>
+  <TBODY>
+  <TR>
+    <TD WIDTH="300" VALIGN="TOP">
+      Mail-Benachrichtigung An/Aus: </TD>
+    <TD WIDTH="300" VALIGN="TOP">
+    <input name="mlFlags0" value="1" type="checkbox" %s> <br /><br /></TD>
+  </TR>
+  <TR>
+    <TD VALIGN="TOP">
+      Automatik ausgeschaltet: </TD>
+    <TD VALIGN="TOP">
+    <input name="mlFlags1" value="2" type="checkbox" %s> <br /><br /></TD>
+  </TR>
+  <TR>
+    <TD VALIGN="TOP">
+      Tägliche Testmail: </TD>
+    <TD VALIGN="TOP">
+    <input name="mlFlags2" value="4" type="checkbox" %s> <br /><br /></TD>
+  </TR>
+  <TR>
+    <TD valign="TOP">
+      Mail Server: </td>
+    <TD>
+      <input name="mlServer" type="text" minlength="7" maxlength="15" size="45" value="%s"><br><br></td>
+    <TD valign="TOP">
+       </td>
+  </TR>
+  <TR>
+    <td valign="TOP">
+      Mail Port: </td>
+    <TD>
+    <input name="mlPort" type="number" minlength="3" maxlength="5" size="8" value="%u" required="1" pattern="[0-9]{5}"> <br><br></td>
+    <TD valign="TOP">
+      </td>
+  </TR>
+  <TR>
+    <TD valign="TOP">
+      Mail-Adresse: </td>
+    <TD>  
+    <input name="mlUser" type="text" minlength="6" maxlength="15" size="19" value="%s"><br><br></td>
+    <TD valign="TOP">
+       </td>
+  </TR>
+  <TR>
+    <TD valign="TOP">
+      Passwort: </td>
+    <TD>
+    <input name="mlPassword" type="password" minlength="5" maxlength="60" size="35" value="xxxxxx"><br><br></td>
+    <TD valign="TOP">
+  </TR>
+  <TR>
+    <TD valign="TOP">
+      Client Domain: </td>
+  <TD>
+    <input name="mlClientDomain" type="text" minlength="5" maxlength="100" size="35" value="%s"><br><br></td>
+    <TD valign="TOP">
+  </TR>
+  <TR>
+    <TD valign="TOP">
+      Empfänger Name: </td>
+  <TD>
+    <input name="mlRecipientName" type="text" minlength="5" maxlength="100" size="35" value="%s"><br><br></td>
+    <TD valign="TOP">
+  </TR>
+  <TR>
+    <TD valign="TOP">
+      Empfangsadresse: </td>
+  <TD>
+    <input name="mlRecipient" type="text" minlength="5" maxlength="100" size="35" value="%s"><br><br></td>
     <TD valign="TOP">
   </TR>
 

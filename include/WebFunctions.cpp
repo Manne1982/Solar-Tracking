@@ -58,6 +58,33 @@ void WebserverSettings(AsyncWebServerRequest *request)
   delete[] Body_neu;
   delete[] Header_neu;
 }
+void WebserverMail(AsyncWebServerRequest *request)
+{
+  char *Header_neu = new char[(strlen(html_header) + 50 + 50)];
+  char *Body_neu = new char[(strlen(html_Mailconfig)+750)];
+  char *HTMLString = new char[(strlen(html_header) + 50 + 50)+(strlen(html_Mailconfig)+750)];
+
+  char *pntSelected[5];
+  for (int i = 0; i < 5; i++)
+    if (i == (varConfig.NW_NTPOffset + 2))
+      pntSelected[i] = (char *)varSelected[1].c_str();
+    else
+      pntSelected[i] = (char *)varSelected[0].c_str();
+  sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str(), varProject.getFailurTimeStr(), InterruptCounter, PollingCounter);
+  sprintf(Body_neu, html_Mailconfig, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
+              Un_Checked[(varConfig.NW_Flags & NW_StaticIP)/NW_StaticIP].c_str(), varConfig.NW_IPAddress, varConfig.NW_NetzName, varConfig.NW_SubMask, varConfig.NW_Gateway, varConfig.NW_DNS, 
+              varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4], 
+              Un_Checked[(varConfig.NW_Flags & NW_MQTTActive)/NW_MQTTActive].c_str(), varConfig.MQTT_Server, varConfig.MQTT_Port, varConfig.MQTT_Username, varConfig.MQTT_rootpath, Un_Checked[(varConfig.NW_Flags & NW_MQTTSecure)/NW_MQTTSecure].c_str());
+  sprintf(HTMLString, "%s%s", Header_neu, Body_neu);
+//  request->send(200, "text/html", HTMLString);
+
+  AsyncBasicResponse *response = new AsyncBasicResponse(200, "text/html", HTMLString);
+  request->send(response);
+
+  delete[] HTMLString;
+  delete[] Body_neu;
+  delete[] Header_neu;
+}
 void WebserverPOST(AsyncWebServerRequest *request)
 {
   int parameter = request->params();
