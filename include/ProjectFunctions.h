@@ -7,6 +7,9 @@ void EinstSpeichern();
 void EinstLaden();
 void SaveProjectData();
 void LoadProjectData();
+void SaveMailConfig();
+void LoadMailConfig();
+
 char ResetVarLesen();
 void ResetVarSpeichern(char Count);
 

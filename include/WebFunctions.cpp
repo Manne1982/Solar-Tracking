@@ -4,6 +4,7 @@
 #include "HTML_Var.h"
 #include "Project_Structures.h"
 #include "ProjectFunctions.h"
+#include "MailFunctions.h"
 
 
 void notFound(AsyncWebServerRequest *request)
@@ -34,9 +35,9 @@ void WebserverRoot(AsyncWebServerRequest *request)
 void WebserverSettings(AsyncWebServerRequest *request)
 {
   char *Header_neu = new char[(strlen(html_header) + 50 + 50)];
-  char *Body_neu = new char[(strlen(html_NWconfig)+750)];
-  char *HTMLString = new char[(strlen(html_header) + 50 + 50)+(strlen(html_NWconfig)+750)];
-
+  char *Body_neu = new char[(strlen(html_NWconfig1)+strlen(html_NWconfig2)+1000)];
+//  char *HTMLString = new char[(strlen(html_header) + 50 + 50)+(strlen(html_NWconfig)+750)];
+  String HTMLString;
   char *pntSelected[5];
   for (int i = 0; i < 5; i++)
     if (i == (varConfig.NW_NTPOffset + 2))
@@ -44,43 +45,54 @@ void WebserverSettings(AsyncWebServerRequest *request)
     else
       pntSelected[i] = (char *)varSelected[0].c_str();
   sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str(), varProject.getFailurTimeStr(), InterruptCounter, PollingCounter);
-  sprintf(Body_neu, html_NWconfig, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
+  HTMLString = Header_neu;
+
+  // sprintf(Body_neu, html_NWconfig, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
+  //             Un_Checked[(varConfig.NW_Flags & NW_StaticIP)/NW_StaticIP].c_str(), varConfig.NW_IPAddress, varConfig.NW_NetzName, varConfig.NW_SubMask, varConfig.NW_Gateway, varConfig.NW_DNS, 
+  //             varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4], 
+  //             Un_Checked[(varConfig.NW_Flags & NW_MQTTActive)/NW_MQTTActive].c_str(), varConfig.MQTT_Server, varConfig.MQTT_Port, varConfig.MQTT_Username, varConfig.MQTT_rootpath, Un_Checked[(varConfig.NW_Flags & NW_MQTTSecure)/NW_MQTTSecure].c_str());
+  // HTMLString += Body_neu;
+  sprintf(Body_neu, html_NWconfig1, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
               Un_Checked[(varConfig.NW_Flags & NW_StaticIP)/NW_StaticIP].c_str(), varConfig.NW_IPAddress, varConfig.NW_NetzName, varConfig.NW_SubMask, varConfig.NW_Gateway, varConfig.NW_DNS, 
-              varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4], 
-              Un_Checked[(varConfig.NW_Flags & NW_MQTTActive)/NW_MQTTActive].c_str(), varConfig.MQTT_Server, varConfig.MQTT_Port, varConfig.MQTT_Username, varConfig.MQTT_rootpath, Un_Checked[(varConfig.NW_Flags & NW_MQTTSecure)/NW_MQTTSecure].c_str());
-  sprintf(HTMLString, "%s%s", Header_neu, Body_neu);
+              varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4]); 
+  HTMLString += Body_neu;
+
+  // sprintf(Body_neu, html_NWconfig2, Un_Checked[(varConfig.NW_Flags & NW_MQTTActive)/NW_MQTTActive].c_str(), varConfig.MQTT_Server, varConfig.MQTT_Port, varConfig.MQTT_Username, 
+  //             varConfig.MQTT_rootpath, Un_Checked[(varConfig.NW_Flags & NW_MQTTSecure)/NW_MQTTSecure].c_str());
+  // HTMLString += Body_neu;
+
+//  sprintf(HTMLString, "%s%s", Header_neu, Body_neu);
 //  request->send(200, "text/html", HTMLString);
-
-  AsyncBasicResponse *response = new AsyncBasicResponse(200, "text/html", HTMLString);
-  request->send(response);
-
-  delete[] HTMLString;
+  if(response == 0)
+  {
+    response = new AsyncBasicResponse(200, "text/html", HTMLString);
+    request->send(response);
+    delete_Response = millis() + 1000;
+  }
+//  delete[] HTMLString;
   delete[] Body_neu;
   delete[] Header_neu;
 }
 void WebserverMail(AsyncWebServerRequest *request)
 {
   char *Header_neu = new char[(strlen(html_header) + 50 + 50)];
-  char *Body_neu = new char[(strlen(html_Mailconfig)+750)];
+  char *Body_neu = new char[(strlen(html_Mailconfig)+1000)];
   char *HTMLString = new char[(strlen(html_header) + 50 + 50)+(strlen(html_Mailconfig)+750)];
+  MailConfig * Mail = varProject.MailSettings;
 
-  char *pntSelected[5];
-  for (int i = 0; i < 5; i++)
-    if (i == (varConfig.NW_NTPOffset + 2))
-      pntSelected[i] = (char *)varSelected[1].c_str();
-    else
-      pntSelected[i] = (char *)varSelected[0].c_str();
   sprintf(Header_neu, html_header, varProject.getTimeString().c_str(), varError[varProject.isError()].c_str(), varProject.getFailurTimeStr(), InterruptCounter, PollingCounter);
-  sprintf(Body_neu, html_Mailconfig, Un_Checked[varConfig.NW_Flags & NW_WiFi_AP].c_str(), varConfig.WLAN_SSID, 
-              Un_Checked[(varConfig.NW_Flags & NW_StaticIP)/NW_StaticIP].c_str(), varConfig.NW_IPAddress, varConfig.NW_NetzName, varConfig.NW_SubMask, varConfig.NW_Gateway, varConfig.NW_DNS, 
-              varConfig.NW_NTPServer, pntSelected[0], pntSelected[1], pntSelected[2], pntSelected[3], pntSelected[4], 
-              Un_Checked[(varConfig.NW_Flags & NW_MQTTActive)/NW_MQTTActive].c_str(), varConfig.MQTT_Server, varConfig.MQTT_Port, varConfig.MQTT_Username, varConfig.MQTT_rootpath, Un_Checked[(varConfig.NW_Flags & NW_MQTTSecure)/NW_MQTTSecure].c_str());
+  sprintf(Body_neu, html_Mailconfig, Mail_NotifyOn, Un_Checked[(Mail->Flags & Mail_NotifyOn)/Mail_NotifyOn].c_str(), Mail_NotifyAutoOff, 
+          Un_Checked[(Mail->Flags & Mail_NotifyAutoOff)/Mail_NotifyAutoOff].c_str(), Mail_DailyTest, Un_Checked[(Mail->Flags & Mail_DailyTest)/Mail_DailyTest].c_str(), 
+          Mail->SMTP_Server, Mail->Mail_Port, Mail->Mail_Username, Mail->Mail_UserDomain, Mail->recipientName, Mail->recipientMail);
   sprintf(HTMLString, "%s%s", Header_neu, Body_neu);
 //  request->send(200, "text/html", HTMLString);
 
-  AsyncBasicResponse *response = new AsyncBasicResponse(200, "text/html", HTMLString);
-  request->send(response);
-
+  if(response == 0)
+  {
+    response = new AsyncBasicResponse(200, "text/html", HTMLString);
+    request->send(response);
+    delete_Response = millis() + 1000;
+  }
   delete[] HTMLString;
   delete[] Body_neu;
   delete[] Header_neu;
@@ -246,6 +258,85 @@ void WebserverPOST(AsyncWebServerRequest *request)
       EinstSpeichern();
       request->send_P(200, "text/html", "MQTT Daten wurden uebernommen, ESP startet neu!<br><meta http-equiv=\"refresh\" content=\"20; URL=\\\">"); //<a href=\>Startseite</a>
       ESP_Restart = true;
+      break;
+    }
+    case subml:
+    {
+      uint16 tmp_Flags = 0, tmp_Port = 0;
+      String Temp[6];
+      for (int i = 0; i < parameter; i++)
+      {
+        if (request->getParam(i)->name().substring(0, 7) == "mlFlags")
+          tmp_Flags += request->getParam(i)->value().toInt();
+        else if (request->getParam(i)->name() == "mlServer")
+          Temp[0] = request->getParam(i)->value();
+        else if (request->getParam(i)->name() == "mlPort")
+          tmp_Port = request->getParam(i)->value().toInt();
+        else if (request->getParam(i)->name() == "mlUser")
+          Temp[1] = request->getParam(i)->value();
+        else if (request->getParam(i)->name() == "mlPassword")
+          Temp[2] = request->getParam(i)->value();
+        else if (request->getParam(i)->name() == "mlClientDomain")
+          Temp[3] = request->getParam(i)->value();
+        else if (request->getParam(i)->name() == "mlRecipientName")
+          Temp[4] = request->getParam(i)->value();
+        else if (request->getParam(i)->name() == "mlRecipient")
+          Temp[5] = request->getParam(i)->value();
+        else if (request->getParam(i)->name() == "mlTest")
+        {
+          if(msgSubject != 0)
+            delete[] msgSubject;
+          if(msgText != 0)
+            delete[] msgText;
+          msgSubject = new char[10];
+          msgText = new char[10];
+          strcpy(msgSubject, "Testmail");
+          strcpy(msgText, "Test");
+
+          boolSendMail = true;
+          request->send_P(200, "text/html", "Mail wird gesendet!<br><meta http-equiv=\"refresh\" content=\"3; URL=\\\">"); //<a href=\>Startseite</a>
+          // int MailResult = SendMail(&smtp, &Mail_config, MailSettings, varConfig.NW_NetzName, "Testmail", "Test");
+          // if(MailResult == 0)
+          //   request->send_P(200, "text/html", "Mail gesendet!<br><meta http-equiv=\"refresh\" content=\"3; URL=\\\">"); //<a href=\>Startseite</a>
+          // else
+          // {
+          //   Temp[0] = "Mail konnte nicht gesendet werden! <br> Code: " + MailResult;
+          //   Temp[0] += "<br> Statustext: " + smtp.statusMessage() + "<br><meta http-equiv=\"refresh\" content=\"3; URL=\\\">";
+          //   request->send_P(200, "text/html", Temp[0].c_str()); //<a href=\>Startseite</a>
+          // }
+          return;
+        }
+        else
+        {
+          Temp[i] = "Unbekannter Rueckgabewert " + request->getParam(i)->name();
+          Temp[i] += " <form> <input type=\"button\" value=\"Go back!\" onclick=\"history.back()\"></form>";
+          request->send_P(200, "text/html",  Temp[i].c_str());
+//          request->send_P(200, "text/html", "Unbekannter Rueckgabewert<form> <input type=\"button\" value=\"Go back!\" onclick=\"history.back()\"></form>");
+          return;
+        }
+      }
+      if(parameter < 8)
+        return;
+      MailConfig * Mail = varProject.MailSettings;
+      Mail->Flags = tmp_Flags;
+      Mail->Mail_Port = tmp_Port;
+      if((Temp[0].length()<49)&&(Temp[0].length()>5))
+        strcpy(Mail->SMTP_Server, Temp[0].c_str());
+      if((Temp[1].length()<19)&&(Temp[1].length()>5))
+        strcpy(Mail->Mail_Username, Temp[1].c_str());
+      if((Temp[2].length()<=60)&&(Temp[2].length()>=5)&&(Temp[2]!= "xxxxxx"))
+        strcpy(Mail->Mail_Password, Temp[2].c_str());
+      if((Temp[3].length()<95)&&(Temp[3].length()>5))
+        strcpy(Mail->Mail_UserDomain, Temp[3].c_str());
+      if((Temp[4].length()<=65)&&(Temp[4].length()>5))
+        strcpy(Mail->recipientName, Temp[4].c_str());
+      if((Temp[5].length()<=65)&&(Temp[5].length()>5))
+        strcpy(Mail->recipientMail, Temp[5].c_str());
+      SaveMailConfig();
+      ConfigMailClient(&varProject.Mail_config, varProject.MailSettings);
+
+      request->send_P(200, "text/html", "Mail Daten wurden uebernommen!<br><meta http-equiv=\"refresh\" content=\"3; URL=\\\">"); //<a href=\>Startseite</a>
+//      ESP_Restart = true;
       break;
     }
     case subcn:

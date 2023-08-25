@@ -1,6 +1,7 @@
 
 #include "ProjectFunctions.h"
 #include "GlobalVariabels.h"
+#include "MailFunctions.h"
 #include <Arduino.h>
 
 
@@ -99,6 +100,56 @@ void LoadProjectData()
   {
     EEPROM.end(); // Free RAM copy of structure
     SaveProjectData();
+  }
+
+}
+//---------------------------------------------------------------------
+//Save and load current Project settings
+void SaveMailConfig()
+{
+  unsigned long int Checksumme = 0;
+  unsigned char *pointer;
+  pointer = (unsigned char *) varProject.MailSettings;
+  for (uint16 i = 0; i < sizeof(*varProject.MailSettings); i++)
+    Checksumme += pointer[i];
+
+
+  //EEPROM initialisieren
+  EEPROM.begin(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings) + 5);
+
+  EEPROM.put(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5, *varProject.MailSettings);
+  EEPROM.put(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings), Checksumme);
+
+  EEPROM.commit(); // Only needed for ESP8266 to get data written
+  EEPROM.end();    // Free RAM copy of structure
+}
+void LoadMailConfig()
+{
+  MailConfig varConfigTest;
+  unsigned long int Checksumme = 0;
+  unsigned long int ChecksummeEEPROM = 0;
+  unsigned char *pointer;
+  pointer = (unsigned char *)&varConfigTest;
+  //EEPROM initialisieren
+  unsigned int EEPROMSize;
+  EEPROMSize = 1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings) + 5;
+  EEPROM.begin(EEPROMSize);
+
+  EEPROM.get(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5, varConfigTest);
+  EEPROM.get(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings), ChecksummeEEPROM);
+
+  for (unsigned long long i = 0; i < sizeof(varConfigTest); i++)
+    Checksumme += pointer[i];
+  if ((Checksumme == ChecksummeEEPROM) && (Checksumme != 0))
+  {
+    EEPROM.get(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5, *varProject.MailSettings);
+    delay(200);
+    EEPROM.end(); // Free RAM copy of structure
+  }
+  else
+  {
+    EEPROM.end(); // Free RAM copy of structure
+    SaveMailConfig();
   }
 
 }

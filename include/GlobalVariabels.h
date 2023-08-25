@@ -5,6 +5,7 @@
 #include "ESPAsyncWebServer.h"
 #include "Project_Structures.h"
 #include <PubSubClient.h>
+#include <ESP_Mail_Client.h>
 
 
 #define BGTDEBUG 1
@@ -12,7 +13,7 @@
 //Projektvariablen
 NWConfig varConfig;
 ProjectClass varProject;
-
+AsyncBasicResponse *response;
 
 //-----------------------------------
 //Touch-Variablen neu
@@ -30,6 +31,7 @@ uint8 PollingLastState = 0;
 char MQTTState[20] = "MQTT Ready";
 char WifiState[20] = "Wifi Ready";
 bool ESP_Restart = false;
+unsigned long delete_Response = 0;
 
 
 //Erstellen Serverelement
@@ -39,5 +41,11 @@ AsyncWebServer server(8080);
 //MQTT Variablen
 WiFiClient wifiClient;
 PubSubClient MQTTclient(wifiClient);
+
+//Mail-Variablen
+bool boolSendMail = false;
+char * msgSubject = 0;
+char * msgText = 0;
+
 
 #endif

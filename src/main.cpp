@@ -12,15 +12,17 @@
 #include "GlobalVariabels.h"
 #include "MQTT_Functions.h"
 #include "WiFiFunctions.h"
-
-
+#include "MailFunctions.h"
 
 void setup(void)
 {
   uint8 ResetCount;
   varProject.InitIO();
+  varProject.varNWConfig = &varConfig;
   attachInterrupt(digitalPinToInterrupt(CounterPinPosition), handleInterrupt, FALLING);
- 
+  Serial.begin(9600);
+  delay(1000);
+  Serial.println("Neustart");
   ResetCount = ResetVarLesen();
   if(ResetCount > 10)  //Prüfen ob Wert Plausibel, wenn nicht rücksetzen
   {
@@ -43,6 +45,8 @@ void setup(void)
 //  {
     EinstLaden();
     LoadProjectData();
+    LoadMailConfig();
+    ConfigMailClient(&varProject.Mail_config, varProject.MailSettings);
     ResetVarSpeichern(0);
 //  }
   //EinstSpeichern();
@@ -73,7 +77,8 @@ void setup(void)
   server.on("/POST", HTTP_POST, WebserverPOST);
   server.on("/Log", HTTP_GET, WebserverViewLog);
 
-  //MQTT_sendText(MQTT_MSG_Logging, "Water control rebooted!");
+//  ConfigMailClient();
+//  SendMail();
 }
 
 void loop()
@@ -153,6 +158,22 @@ void loop()
   {
     delay(1000);
     ESP.restart();
+  }
+  if((delete_Response > 0) && (delete_Response < millis()))
+  {
+    delete_Response = 0;
+    delete response;
+    response = 0;
+  }
+  if(boolSendMail)
+  {
+    SendMail(&varProject.smtp, &varProject.Mail_config, varProject.MailSettings, varConfig.NW_NetzName, msgSubject, msgText);
+    boolSendMail = false;
+    delete[] msgSubject;
+    msgSubject = 0;
+    delete[] msgText;
+    msgText = 0;
+
   }
   if(digitalRead(CounterPinPosition))
   {

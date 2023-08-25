@@ -7,7 +7,7 @@
 
 const String WeekDays[7]={"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
 // //Allgemeine Definitionen
-enum {subwl = 27767, subnw = 30574, subcn = 28259, subpd = 17488, subps = 21328, sublf = 17996, sublm = 19788, submq = 29037, subpo = 28528, subtm = 28020}; //Zuordnung der Submit-Bereiche einer Ganzzahl
+enum {subwl = 27767, subnw = 30574, subcn = 28259, subpd = 17488, subps = 21328, sublf = 17996, sublm = 19788, submq = 29037, subpo = 28528, subtm = 28020, subml = 27757}; //Zuordnung der Submit-Bereiche einer Ganzzahl
 const String Un_Checked[2]{"","Checked"};
 const String varSelected[2]{"", " selected=\"\""};
 const String varDisabled[2]{"", "disabled"};
@@ -201,7 +201,7 @@ const char html_Start[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 
-const char html_NWconfig[] PROGMEM = R"rawliteral(
+const char html_NWconfig1[] PROGMEM = R"rawliteral(
 <h1>Solar Tracker Netzwerk Einstellungen</h1><hr>
 <h2>WLAN</h2>
 <form method="post" action="/POST">
@@ -310,6 +310,11 @@ const char html_NWconfig[] PROGMEM = R"rawliteral(
     <BR>
   <input value="Submit" type="submit">
   </form>
+</body>
+</html>
+
+)rawliteral";
+const char html_NWconfig2[] PROGMEM = R"rawliteral(
 <HR>
 <h2>MQTT</h2><BR>
 <form method="post" action="/POST">
@@ -384,8 +389,6 @@ const char html_NWconfig[] PROGMEM = R"rawliteral(
 
 const char html_Mailconfig[] PROGMEM = R"rawliteral(
 <h1>Solar Tracker Mail Einstellungen</h1><hr>
-<HR>
-<h2>Einstellung Sendeadresse</h2><BR>
 <form method="post" action="/POST">
 <TABLE>
   <TBODY>
@@ -393,25 +396,25 @@ const char html_Mailconfig[] PROGMEM = R"rawliteral(
     <TD WIDTH="300" VALIGN="TOP">
       Mail-Benachrichtigung An/Aus: </TD>
     <TD WIDTH="300" VALIGN="TOP">
-    <input name="mlFlags0" value="1" type="checkbox" %s> <br /><br /></TD>
+    <input name="mlFlags0" value="%u" type="checkbox" %s> <br /><br /></TD>
   </TR>
   <TR>
     <TD VALIGN="TOP">
       Automatik ausgeschaltet: </TD>
     <TD VALIGN="TOP">
-    <input name="mlFlags1" value="2" type="checkbox" %s> <br /><br /></TD>
+    <input name="mlFlags1" value="%u" type="checkbox" %s> <br /><br /></TD>
   </TR>
   <TR>
     <TD VALIGN="TOP">
       Tägliche Testmail: </TD>
     <TD VALIGN="TOP">
-    <input name="mlFlags2" value="4" type="checkbox" %s> <br /><br /></TD>
+    <input name="mlFlags2" value="%u" type="checkbox" %s> <br /><br /></TD>
   </TR>
   <TR>
     <TD valign="TOP">
       Mail Server: </td>
     <TD>
-      <input name="mlServer" type="text" minlength="7" maxlength="15" size="45" value="%s"><br><br></td>
+      <input name="mlServer" type="text" minlength="5" maxlength="19" size="35" value="%s"><br><br></td>
     <TD valign="TOP">
        </td>
   </TR>
@@ -427,7 +430,7 @@ const char html_Mailconfig[] PROGMEM = R"rawliteral(
     <TD valign="TOP">
       Mail-Adresse: </td>
     <TD>  
-    <input name="mlUser" type="text" minlength="6" maxlength="15" size="19" value="%s"><br><br></td>
+    <input name="mlUser" type="email" minlength="6" maxlength="49" size="35" value="%s"><br><br></td>
     <TD valign="TOP">
        </td>
   </TR>
@@ -435,28 +438,28 @@ const char html_Mailconfig[] PROGMEM = R"rawliteral(
     <TD valign="TOP">
       Passwort: </td>
     <TD>
-    <input name="mlPassword" type="password" minlength="5" maxlength="60" size="35" value="xxxxxx"><br><br></td>
+    <input name="mlPassword" type="password" minlength="5" maxlength="39" size="35" value="xxxxxx"><br><br></td>
     <TD valign="TOP">
   </TR>
   <TR>
     <TD valign="TOP">
       Client Domain: </td>
   <TD>
-    <input name="mlClientDomain" type="text" minlength="5" maxlength="100" size="35" value="%s"><br><br></td>
+    <input name="mlClientDomain" type="text" maxlength="99" size="35" value="%s"><br><br></td>
     <TD valign="TOP">
   </TR>
   <TR>
     <TD valign="TOP">
       Empfänger Name: </td>
   <TD>
-    <input name="mlRecipientName" type="text" minlength="5" maxlength="100" size="35" value="%s"><br><br></td>
+    <input name="mlRecipientName" type="text" minlength="5" maxlength="29" size="35" value="%s"><br><br></td>
     <TD valign="TOP">
   </TR>
   <TR>
     <TD valign="TOP">
       Empfangsadresse: </td>
   <TD>
-    <input name="mlRecipient" type="text" minlength="5" maxlength="100" size="35" value="%s"><br><br></td>
+    <input name="mlRecipient" type="email" minlength="5" maxlength="49" size="35" value="%s"><br><br></td>
     <TD valign="TOP">
   </TR>
 
@@ -464,6 +467,10 @@ const char html_Mailconfig[] PROGMEM = R"rawliteral(
     <br>
   <input value="Submit" type="submit">
   </form>
+<form method="post" action="/POST">
+  <input name="mlTest" value="1" type="hidden">
+  <input value="Sende Test-Mail" type="submit">
+</form>
 
 </body>
 </html>

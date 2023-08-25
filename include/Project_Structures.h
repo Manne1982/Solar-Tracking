@@ -2,6 +2,7 @@
 #define Project_Structures
 #include <Arduino.h>
 #include <NTPClient.h>
+#include "MailFunctions.h"
 
 
 #define OutputTurnOnOff D6
@@ -52,15 +53,6 @@ struct ProjectConfig {
   uint8 TimeEnd[2];
   uint8 TimeTurnBack[2];  
   uint16 BreakMinute;
-};
-struct MailConfig{
-  uint16 Flags = 0; 
-  char SMTP_Server[50] = "";
-  uint16_t Mail_Port = 587;
-  char Mail_Username[20] = "Benutzer@gmail.com";
-  char Mail_Password[70] = "123456";
-  char Mail_UserDomain[100] = "/SolarTracker";
-
 };
 class ProjectClass {
   public:
@@ -122,6 +114,12 @@ class ProjectClass {
     const char * getFailurTimeStr();
     void SaveMessage(const char * newMes);
     char * GetLastMessagesHTML();
+
+    //E-Mail Variablen
+    Session_Config Mail_config;
+    SMTPSession smtp;
+    MailConfig * MailSettings;
+    NWConfig * varNWConfig;
 
   private:
     uint16 getMinutes(uint8 * _Time);

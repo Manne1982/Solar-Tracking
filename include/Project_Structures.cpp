@@ -4,7 +4,7 @@
 //fuer Uhrzeitabruf notwendig
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-
+#include "MailFunctions.h"
 
 
 ProjectClass::ProjectClass():
@@ -29,6 +29,7 @@ currentMin(0),
 maxMessages(50),
 countMessages(0)
 {
+    MailSettings = new MailConfig;
     Settings = new ProjectConfig;
     Settings->TimeEnd[tmHour] = 22;
     Settings->TimeEnd[tmMinute] = 59;
@@ -46,6 +47,7 @@ countMessages(0)
 
 ProjectClass::~ProjectClass()
 {
+    delete MailSettings;
     delete Settings;
     delete ntpUDP;
 }
@@ -237,6 +239,8 @@ void ProjectClass::loop(const unsigned long * intCounter, unsigned long * intCou
         SaveMessage("Zeit abgelaufen Fehler");
         TurnSolar(solOff);
         stopAutoMode();
+        if((MailSettings->Flags & (Mail_NotifyOn + Mail_NotifyAutoOff))==(Mail_NotifyOn + Mail_NotifyAutoOff))
+            SendMail(&smtp, &Mail_config, MailSettings, varNWConfig->NW_NetzName, "Achtung! Automaik abgeschaltet!", "Automatik ausgeschaltet da Motor nicht dreht (Reaktionszeit abgelaufen)");
         Settings->Flags |= flagError;
         if(FailureTime[0]==0)
             strcpy(FailureTime, getTimeString().c_str());
@@ -486,7 +490,11 @@ void ProjectClass::addToCounterFailure(uint16 _value)
 {
     counterFailure += _value;
     if((counterFailure >= Settings->StartPosition)||(counterFailure >= (Settings->MaxPosition - Settings->EndPosition)))
+    {
         Settings->Flags &= ~((uint16) flagInitialised | (uint16) flagAutoModeOn);
+        if((MailSettings->Flags & (Mail_NotifyOn + Mail_NotifyAutoOff))==(Mail_NotifyOn + Mail_NotifyAutoOff))
+            SendMail(&smtp, &Mail_config, MailSettings, varNWConfig->NW_NetzName, "Achtung! Automaik abgeschaltet!", "Automatik ausgeschaltet da es zu viele Zählfehler gab!");
+    }
 }
 uint16 ProjectClass::resetCounterFailure()
 {
@@ -659,6 +667,9 @@ void ProjectClass::ReferenceLoopLight()
             resetCounterFailure();
             referenceStateLight = 0;
             SaveMessage("ReferenceLight 3");
+            if((MailSettings->Flags & (Mail_NotifyOn + Mail_DailyTest))==(Mail_NotifyOn + Mail_DailyTest))
+                SendMail(&smtp, &Mail_config, MailSettings, varNWConfig->NW_NetzName, "Referenzfahrt light erfolgreich abgeschlossen!", "Dies ist eine tägliche Mail um die Funktionalität des Mailversands nachzuweisen");
+
         }
         break;
     default:
