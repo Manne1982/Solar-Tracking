@@ -16,7 +16,7 @@ void EinstSpeichern()
     Checksumme += pointer[i];
 
   //EEPROM initialisieren
-  EEPROM.begin(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1);
+  EEPROM.begin(EEPROMSize);
 
   EEPROM.put(1, varConfig);
   EEPROM.put(sizeof(varConfig) + 1, Checksumme);
@@ -32,8 +32,6 @@ void EinstLaden()
   unsigned char *pointer;
   pointer = (unsigned char *)&varConfigTest;
   //EEPROM initialisieren
-  unsigned int EEPROMSize;
-  EEPROMSize = sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1;
   EEPROM.begin(EEPROMSize);
 
   EEPROM.get(1, varConfigTest);
@@ -65,7 +63,7 @@ void SaveProjectData()
 
 
   //EEPROM initialisieren
-  EEPROM.begin(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1);
+  EEPROM.begin(EEPROMSize);
 
   EEPROM.put(sizeof(varConfig) + 5 + 1, *varProject.getSettings());
   EEPROM.put(sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 1, Checksumme);
@@ -81,8 +79,6 @@ void LoadProjectData()
   unsigned char *pointer;
   pointer = (unsigned char *)&varConfigTest;
   //EEPROM initialisieren
-  unsigned int EEPROMSize;
-  EEPROMSize = sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + 1;
   EEPROM.begin(EEPROMSize);
 
   EEPROM.get(sizeof(varConfig) + 5 + 1, varConfigTest);
@@ -115,7 +111,7 @@ void SaveMailConfig()
 
 
   //EEPROM initialisieren
-  EEPROM.begin(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings) + 5);
+  EEPROM.begin(EEPROMSize);
 
   EEPROM.put(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5, *varProject.MailSettings);
   EEPROM.put(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings), Checksumme);
@@ -131,8 +127,6 @@ void LoadMailConfig()
   unsigned char *pointer;
   pointer = (unsigned char *)&varConfigTest;
   //EEPROM initialisieren
-  unsigned int EEPROMSize;
-  EEPROMSize = 1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings) + 5;
   EEPROM.begin(EEPROMSize);
 
   EEPROM.get(1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5, varConfigTest);

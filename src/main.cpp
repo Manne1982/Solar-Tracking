@@ -186,7 +186,7 @@ void loop()
     {
       PollingCounter += (PollingLastState * 1);
       PollingLastState = 0;
-      CountBreakPol = millis() + 70;
+      CountBreakPol = millis() + 100;
     }
   }
   varProject.loop(&PollingCounter, &InterruptCounterOld);

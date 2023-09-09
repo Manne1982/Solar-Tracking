@@ -13,7 +13,9 @@
 //Projektvariablen
 NWConfig varConfig;
 ProjectClass varProject;
-AsyncBasicResponse *response;
+AsyncWebServerResponse *response;
+String strHTMLString;
+const unsigned int EEPROMSize = 1 + sizeof(varConfig) + 5 + sizeof(*varProject.getSettings()) + 5 + sizeof(*varProject.MailSettings) + 5;
 
 //-----------------------------------
 //Touch-Variablen neu
