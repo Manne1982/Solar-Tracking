@@ -28,6 +28,7 @@ unsigned long InterruptCounter = 0;
 unsigned long InterruptCounterOld = 0;
 unsigned long PollingCounter = 0;
 unsigned long CountBreakInt = 0;
+uint16 TimeInterrupt = 0;
 unsigned long CountBreakPol = 0;
 uint8 PollingLastState = 0;
 char MQTTState[20] = "MQTT Ready";

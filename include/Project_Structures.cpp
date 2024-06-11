@@ -27,7 +27,8 @@ currentYear(0),
 currentHour(0),
 currentMin(0),
 maxMessages(50),
-countMessages(0)
+countMessages(0),
+countTimes(0)
 {
     MailSettings = new MailConfig;
     Settings = new ProjectConfig;
@@ -43,6 +44,9 @@ countMessages(0)
     for(int i = 0; i < maxMessages; i++)
         sentMessages[i]= 0;
     lastMessage = maxMessages-1;
+    Times = new uint16[50];
+    for(int i = 0; i < 50; i++)
+        Times[i]=0;
 }
 
 ProjectClass::~ProjectClass()
@@ -195,10 +199,11 @@ void ProjectClass::TurnSolar(uint8 _value)
     break;
   }
 }
-void ProjectClass::loop(const unsigned long * intCounter, unsigned long * intCounterOld)
+void ProjectClass::loop(const unsigned long * intCounter, unsigned long * intCounterOld, uint16 TimeInt)
 {
     if(*intCounter != *intCounterOld)
     {
+        SaveTime(TimeInt);
         uint16 Temp = *intCounter -  *intCounterOld;
         *intCounterOld = *intCounter;   
         switch(getOutputSolarState())
@@ -725,6 +730,27 @@ void ProjectClass::SaveMessage(const char * newMes)
   
   lastMessage = nextPos;
   countMessages++;
+}
+void ProjectClass::SaveTime(uint16 Time)
+{
+    Times[countTimes] = Time;
+    countTimes =  (countTimes+1)%50;
+}
+char * ProjectClass::getTimesHTML()
+{
+    char * Temp = new char[580];
+    sprintf(Temp, "Zeiten: <br>\n");
+     uint16 Start = Times[countTimes]==0?0:countTimes;
+    for(int i = 0; i < 50; i++)
+    {
+        if(Times[(i+Start)%50]>=1000)
+            continue;
+        if(Times[(i+Start)%50]!=0)
+            sprintf(&Temp[strlen(Temp)], "%u <br />\n", Times[(i+Start)%50]);
+        else
+            break;
+    }
+    return Temp;
 }
 char * ProjectClass::GetLastMessagesHTML()
 {

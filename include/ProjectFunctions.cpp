@@ -172,12 +172,11 @@ char ResetVarLesen()
 
 void IRAM_ATTR handleInterrupt()
 {
-  if(CountBreakInt < millis())
-  {
+    if((millis() -  CountBreakInt) < 85)
+      return;
     InterruptCounter++;
-    CountBreakInt = millis() + 70;
-  }
-
+    TimeInterrupt = millis() -  CountBreakInt;
+    CountBreakInt = millis();
 }
 
 String IntToStr(int _var)

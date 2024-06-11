@@ -196,6 +196,8 @@ const char html_Start[] PROGMEM = R"rawliteral(
 </TABLE>
 <br />
 <a href=\Log\>Logbuch</a>  
+<br />
+<a href=\time\>Zeiten</a>  
 </body>
 </html>
 )rawliteral";

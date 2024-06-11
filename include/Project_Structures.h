@@ -65,7 +65,7 @@ class ProjectClass {
     void goToAutoPosition();
     String getTimeString();
     void TurnSolar(uint8 _value = solOff); 
-    void loop(const unsigned long * intCounter, unsigned long * intCounterOld); //Funktion have to included into main loop
+    void loop(const unsigned long * intCounter, unsigned long * intCounterOld, uint16 TimeInt); //Funktion have to included into main loop
     void goToPosition(uint32 _Value);
     void goToStart();
     void goToEnd();
@@ -113,7 +113,9 @@ class ProjectClass {
     void ChangeLED();
     const char * getFailurTimeStr();
     void SaveMessage(const char * newMes);
+    void SaveTime(uint16 Time);
     char * GetLastMessagesHTML();
+    char * getTimesHTML();
 
     //E-Mail Variablen
     Session_Config Mail_config;
@@ -156,6 +158,8 @@ class ProjectClass {
     char * *sentMessages;
     uint8_t lastMessage = maxMessages-1;
     uint16_t countMessages = 0;
+    uint16 * Times;
+    uint16 countTimes;
 };
 
 #include "Project_Structures.cpp"

@@ -563,3 +563,9 @@ void WebserverViewLog(AsyncWebServerRequest *request)
   request->send_P(200, "text/html", strLastMessages);
   delete[] strLastMessages;
 }
+void WebserverViewTime(AsyncWebServerRequest *request)
+{
+  char * strTimes = varProject.getTimesHTML();
+  request->send_P(200, "text/html", strTimes);
+  delete[] strTimes;
+}

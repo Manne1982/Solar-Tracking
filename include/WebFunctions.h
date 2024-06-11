@@ -8,6 +8,7 @@ void WebserverSettings(AsyncWebServerRequest *request);
 void WebserverMail(AsyncWebServerRequest *request);
 void WebserverPOST(AsyncWebServerRequest *request);
 void WebserverViewLog(AsyncWebServerRequest *request);
+void WebserverViewTime(AsyncWebServerRequest *request);
 
 char * GetLastMessagesHTML();
 

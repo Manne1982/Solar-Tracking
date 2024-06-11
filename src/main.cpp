@@ -76,6 +76,7 @@ void setup(void)
   server.on("/Mail", HTTP_GET, WebserverMail);
   server.on("/POST", HTTP_POST, WebserverPOST);
   server.on("/Log", HTTP_GET, WebserverViewLog);
+  server.on("/time", HTTP_GET, WebserverViewTime);
 
 //  ConfigMailClient();
 //  SendMail();
@@ -182,14 +183,14 @@ void loop()
   }
   else
   {
-    if(CountBreakPol < millis())
-    {
+  //  if(CountBreakPol < millis())
+  //  {
       PollingCounter += (PollingLastState * 1);
       PollingLastState = 0;
-      CountBreakPol = millis() + 100;
-    }
+  //    CountBreakPol = millis() + 100;
+  //  }
   }
-  varProject.loop(&PollingCounter, &InterruptCounterOld);
+  varProject.loop(&InterruptCounter, &InterruptCounterOld, TimeInterrupt);
 }
 
 
