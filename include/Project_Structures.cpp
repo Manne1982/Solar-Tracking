@@ -784,3 +784,11 @@ char * ProjectClass::GetLastMessagesHTML()
   sprintf(TextSum, "%s", Text.c_str());
   return TextSum;
 }
+
+bool ProjectClass::getPositioningOnWork(void) 
+{
+    if(AutoPositioningOn || referenceState || referenceStateLight){
+        return true;
+    }
+    return false;
+}

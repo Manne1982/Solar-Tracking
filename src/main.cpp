@@ -107,7 +107,6 @@ void loop()
     if (Break_60s < millis())
     {
       Break_60s = millis() + 60000;
-
       if((varProject.getOutputSolarState() == solOff) && varProject.anyChange())
         SaveProjectData();    
 
@@ -134,6 +133,8 @@ void loop()
     if (Break_10s < millis())
     {
       Break_10s = millis() + 10000;
+      if(!varProject.getPositioningOnWork())
+        varProject.ChangeLED();
       //Vorbereitung Datum
       varProject.checkSchedule();
     }

@@ -116,6 +116,7 @@ class ProjectClass {
     void SaveTime(uint16 Time);
     char * GetLastMessagesHTML();
     char * getTimesHTML();
+    bool getPositioningOnWork(void);
 
     //E-Mail Variablen
     Session_Config Mail_config;
